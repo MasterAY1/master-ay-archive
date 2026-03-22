@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Box, ShoppingCart, BarChart3, Film } from 'lucide-react';
+import { ArrowLeft, Box, ShoppingCart, BarChart3, Film, Users } from 'lucide-react';
 
+// Import all 5 of your projects
 import AuraStore from './AuraStore';
 import LuminaStore from './LuminaStore';
 import NexusDashboard from './NexusDashboard';
@@ -8,6 +9,7 @@ import StudioFolio from './StudioFolio';
 import CrmDashboard from './CrmDashboard';
 
 export default function App() {
+  // State to track which project we are currently viewing
   const [activeProject, setActiveProject] = useState('home');
 
   // 1. Check the URL when the site first loads
@@ -19,7 +21,7 @@ export default function App() {
     }
   }, []);
 
-  // ✨ NEW: Dynamically update the browser tab title
+  // 2. Dynamically update the browser tab title
   useEffect(() => {
     switch (activeProject) {
       case 'home':
@@ -45,14 +47,14 @@ export default function App() {
     }
   }, [activeProject]);
 
-  // 2. Function to change the URL without reloading the page
+  // 3. Function to change the URL without reloading the page
   const navigateTo = (projectId) => {
     const newUrl = projectId === 'home' ? '/' : `/?p=${projectId}`;
     window.history.pushState({}, '', newUrl);
     setActiveProject(projectId);
   };
 
-  // ... the rest of your App.jsx code stays exactly the same ...
+  // --- FLOATING BACK BUTTON ---
   const BackButton = () => (
     <button 
       onClick={() => navigateTo('home')}
@@ -72,6 +74,8 @@ export default function App() {
   // --- MAIN DIRECTORY (HOME) ---
   return (
     <div className="min-h-screen bg-[#050505] text-white p-6 md:p-16 lg:p-24 font-sans selection:bg-white selection:text-black">
+      
+      {/* Header */}
       <header className="mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6">
           MASTER_AY <br/>
@@ -84,9 +88,10 @@ export default function App() {
         </p>
       </header>
 
+      {/* Project Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150 fill-mode-both">
         
-        {/* Notice we use navigateTo() now instead of setActiveProject() */}
+        {/* Project 1: Aura */}
         <button onClick={() => navigateTo('aura')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#00e5ff]/5 rounded-bl-full pointer-events-none group-hover:bg-[#00e5ff]/10 transition-colors"></div>
           <Box className="text-[#00e5ff] mb-6" size={32} />
@@ -98,6 +103,7 @@ export default function App() {
           </div>
         </button>
 
+        {/* Project 2: Lumina */}
         <button onClick={() => navigateTo('lumina')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-bl-full pointer-events-none group-hover:bg-orange-500/10 transition-colors"></div>
           <ShoppingCart className="text-orange-500 mb-6" size={32} />
@@ -109,6 +115,7 @@ export default function App() {
           </div>
         </button>
 
+        {/* Project 3: Nexus */}
         <button onClick={() => navigateTo('nexus')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#8b5cf6]/5 rounded-bl-full pointer-events-none group-hover:bg-[#8b5cf6]/10 transition-colors"></div>
           <BarChart3 className="text-[#8b5cf6] mb-6" size={32} />
@@ -121,6 +128,7 @@ export default function App() {
           </div>
         </button>
 
+        {/* Project 4: Studio */}
         <button onClick={() => navigateTo('studio')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full pointer-events-none group-hover:bg-white/10 transition-colors"></div>
           <Film className="text-white mb-6" size={32} />
@@ -132,7 +140,7 @@ export default function App() {
           </div>
         </button>
 
-        {/* Project 5: CRM Dashboard */}
+        {/* Project 5: CRM Dashboard (Spans 2 columns on desktop) */}
         <button onClick={() => navigateTo('crm')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden md:col-span-2">
           <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/5 rounded-bl-full pointer-events-none group-hover:bg-pink-500/10 transition-colors"></div>
           <Users className="text-pink-500 mb-6" size={32} />
