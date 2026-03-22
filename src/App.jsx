@@ -18,6 +18,29 @@ export default function App() {
     }
   }, []);
 
+  // ✨ NEW: Dynamically update the browser tab title
+  useEffect(() => {
+    switch (activeProject) {
+      case 'home':
+        document.title = 'MASTER_AY | Frontend Archive';
+        break;
+      case 'aura':
+        document.title = 'Aura Immersive | 3D Storefront';
+        break;
+      case 'lumina':
+        document.title = 'Lumina | Modern E-Commerce';
+        break;
+      case 'nexus':
+        document.title = 'Nexus | Analytics Dashboard';
+        break;
+      case 'studio':
+        document.title = 'Studio Folio | Creative Agency';
+        break;
+      default:
+        document.title = 'MASTER_AY | Frontend Archive';
+    }
+  }, [activeProject]);
+
   // 2. Function to change the URL without reloading the page
   const navigateTo = (projectId) => {
     const newUrl = projectId === 'home' ? '/' : `/?p=${projectId}`;
@@ -25,6 +48,7 @@ export default function App() {
     setActiveProject(projectId);
   };
 
+  // ... the rest of your App.jsx code stays exactly the same ...
   const BackButton = () => (
     <button 
       onClick={() => navigateTo('home')}
