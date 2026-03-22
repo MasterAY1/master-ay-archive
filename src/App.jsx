@@ -5,6 +5,7 @@ import AuraStore from './AuraStore';
 import LuminaStore from './LuminaStore';
 import NexusDashboard from './NexusDashboard';
 import StudioFolio from './StudioFolio';
+import CrmDashboard from './CrmDashboard';
 
 export default function App() {
   const [activeProject, setActiveProject] = useState('home');
@@ -36,6 +37,9 @@ export default function App() {
       case 'studio':
         document.title = 'Studio Folio | Creative Agency';
         break;
+      case 'crm':
+        document.title = 'Velocity CRM | B2B SaaS Interface';
+        break;
       default:
         document.title = 'MASTER_AY | Frontend Archive';
     }
@@ -63,6 +67,7 @@ export default function App() {
   if (activeProject === 'lumina') return <><LuminaStore /><BackButton /></>;
   if (activeProject === 'nexus') return <><NexusDashboard /><BackButton /></>;
   if (activeProject === 'studio') return <><StudioFolio /><BackButton /></>;
+  if (activeProject === 'crm') return <><CrmDashboard /><BackButton /></>;
 
   // --- MAIN DIRECTORY (HOME) ---
   return (
@@ -124,6 +129,18 @@ export default function App() {
           <div className="flex gap-2">
             <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">Micro-interactions</span>
             <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">Custom Cursors</span>
+          </div>
+        </button>
+
+        {/* Project 5: CRM Dashboard */}
+        <button onClick={() => navigateTo('crm')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden md:col-span-2">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/5 rounded-bl-full pointer-events-none group-hover:bg-pink-500/10 transition-colors"></div>
+          <Users className="text-pink-500 mb-6" size={32} />
+          <h2 className="text-2xl font-bold mb-2">Velocity CRM</h2>
+          <p className="text-gray-500 mb-6">B2B SaaS Pipeline & Interaction Design</p>
+          <div className="flex gap-2">
+            <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">UI/UX</span>
+            <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">React Flow</span>
           </div>
         </button>
 
