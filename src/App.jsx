@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Box, ShoppingCart, BarChart3, Film, Users } from 'lucide-react';
+import { ArrowLeft, Box, ShoppingCart, BarChart3, Film, Users, Bot } from 'lucide-react';
 
-// Import all 5 of your projects
+// Import all 6 of your projects
 import AuraStore from './AuraStore';
 import LuminaStore from './LuminaStore';
 import NexusDashboard from './NexusDashboard';
 import StudioFolio from './StudioFolio';
 import CrmDashboard from './CrmDashboard';
 import NovaAI from './NovaAI';
-import { Bot } from 'lucide-react'; // We need the Bot icon for the grid!
 
 export default function App() {
-  // State to track which project we are currently viewing
   const [activeProject, setActiveProject] = useState('home');
 
   // 1. Check the URL when the site first loads
@@ -26,29 +24,14 @@ export default function App() {
   // 2. Dynamically update the browser tab title
   useEffect(() => {
     switch (activeProject) {
-      case 'home':
-        document.title = 'MASTER_AY | Frontend Archive';
-        break;
-      case 'aura':
-        document.title = 'Aura Immersive | 3D Storefront';
-        break;
-      case 'lumina':
-        document.title = 'Lumina | Modern E-Commerce';
-        break;
-      case 'nexus':
-        document.title = 'Nexus | Analytics Dashboard';
-        break;
-      case 'studio':
-        document.title = 'Studio Folio | Creative Agency';
-        break;
-      case 'crm':
-        document.title = 'Velocity CRM | B2B SaaS Interface';
-        break;
-      case 'ai':
-        document.title = 'Nova AI | Chat Interface';
-        break;
-      default:
-        document.title = 'MASTER_AY | Frontend Archive';
+      case 'home': document.title = 'MASTER_AY | Frontend Archive'; break;
+      case 'aura': document.title = 'Aura Immersive | 3D Storefront'; break;
+      case 'lumina': document.title = 'Lumina | Modern E-Commerce'; break;
+      case 'nexus': document.title = 'Nexus | Analytics Dashboard'; break;
+      case 'studio': document.title = 'Studio Folio | Creative Agency'; break;
+      case 'crm': document.title = 'Velocity CRM | B2B SaaS Interface'; break;
+      case 'ai': document.title = 'Nova AI | Chat Interface'; break;
+      default: document.title = 'MASTER_AY | Frontend Archive';
     }
   }, [activeProject]);
 
@@ -103,9 +86,8 @@ export default function App() {
           <Box className="text-[#00e5ff] mb-6" size={32} />
           <h2 className="text-2xl font-bold mb-2">Aura Immersive</h2>
           <p className="text-gray-500 mb-6">WebGL 3D Product Storefront</p>
-          <div className="flex gap-2">
-            <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">React Three Fiber</span>
-            <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">Three.js</span>
+          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
+            <span className="bg-white/5 px-3 py-1 rounded-full">React Three Fiber</span>
           </div>
         </button>
 
@@ -115,9 +97,9 @@ export default function App() {
           <ShoppingCart className="text-orange-500 mb-6" size={32} />
           <h2 className="text-2xl font-bold mb-2">Lumina E-Commerce</h2>
           <p className="text-gray-500 mb-6">State-Driven Shopping Cart UI</p>
-          <div className="flex gap-2">
-            <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">React State</span>
-            <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">Tailwind CSS</span>
+          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
+            <span className="bg-white/5 px-3 py-1 rounded-full">React State</span>
+            <span className="bg-white/5 px-3 py-1 rounded-full">Tailwind CSS</span>
           </div>
         </button>
 
@@ -129,7 +111,6 @@ export default function App() {
           <p className="text-gray-500 mb-6">Enterprise Data Dashboard (SPA)</p>
           <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
             <span className="bg-white/5 px-3 py-1 rounded-full">Recharts</span>
-            <span className="bg-white/5 px-3 py-1 rounded-full">Data Viz</span>
             <span className="bg-white/5 px-3 py-1 rounded-full">Routing</span>
           </div>
         </button>
@@ -140,21 +121,32 @@ export default function App() {
           <Film className="text-white mb-6" size={32} />
           <h2 className="text-2xl font-bold mb-2">Studio Folio</h2>
           <p className="text-gray-500 mb-6">Interactive Creative Agency Layout</p>
-          <div className="flex gap-2">
-            <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">Micro-interactions</span>
-            <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">Custom Cursors</span>
+          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
+            <span className="bg-white/5 px-3 py-1 rounded-full">Micro-interactions</span>
           </div>
         </button>
 
-        {/* Project 5: CRM Dashboard (Spans 2 columns on desktop) */}
-        <button onClick={() => navigateTo('crm')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden md:col-span-2">
+        {/* Project 5: CRM Dashboard */}
+        <button onClick={() => navigateTo('crm')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/5 rounded-bl-full pointer-events-none group-hover:bg-pink-500/10 transition-colors"></div>
           <Users className="text-pink-500 mb-6" size={32} />
           <h2 className="text-2xl font-bold mb-2">Velocity CRM</h2>
           <p className="text-gray-500 mb-6">B2B SaaS Pipeline & Interaction Design</p>
-          <div className="flex gap-2">
-            <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">UI/UX</span>
-            <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded-full text-gray-400">React Flow</span>
+          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
+            <span className="bg-white/5 px-3 py-1 rounded-full">UI/UX</span>
+            <span className="bg-white/5 px-3 py-1 rounded-full">React Flow</span>
+          </div>
+        </button>
+
+        {/* Project 6: AI Interface */}
+        <button onClick={() => navigateTo('ai')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-bl-full pointer-events-none group-hover:bg-indigo-500/10 transition-colors"></div>
+          <Bot className="text-indigo-500 mb-6" size={32} />
+          <h2 className="text-2xl font-bold mb-2">Nova AI Wrapper</h2>
+          <p className="text-gray-500 mb-6">SaaS Chat Interface & Simulated Loading States</p>
+          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
+            <span className="bg-white/5 px-3 py-1 rounded-full">Layouts</span>
+            <span className="bg-white/5 px-3 py-1 rounded-full">Micro-interactions</span>
           </div>
         </button>
 
