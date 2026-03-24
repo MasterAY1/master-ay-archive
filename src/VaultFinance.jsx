@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Wallet, LineChart, Activity, Clock, ArrowUpRight, 
   ArrowDownRight, CreditCard, Send, Plus, MoreVertical, 
-  Bitcoin, DollarSign, PieChart, TrendingUp 
+  Bitcoin, DollarSign, PieChart, TrendingUp, Search 
 } from 'lucide-react';
 
 // --- MOCK DATA ---
