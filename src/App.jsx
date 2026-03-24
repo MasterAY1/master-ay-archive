@@ -76,7 +76,6 @@ export default function App() {
   if (activeProject === 'studio') return <><StudioFolio /><BackButton /></>;
   if (activeProject === 'crm') return <><CrmDashboard /><BackButton /></>;
   if (activeProject === 'ai') return <><NovaAI /><BackButton /></>;
-  
 
   // --- MAIN DIRECTORY (HOME) ---
   return (
