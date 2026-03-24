@@ -7,6 +7,8 @@ import LuminaStore from './LuminaStore';
 import NexusDashboard from './NexusDashboard';
 import StudioFolio from './StudioFolio';
 import CrmDashboard from './CrmDashboard';
+import NovaAI from './NovaAI';
+import { Bot } from 'lucide-react'; // We need the Bot icon for the grid!
 
 export default function App() {
   // State to track which project we are currently viewing
@@ -42,6 +44,9 @@ export default function App() {
       case 'crm':
         document.title = 'Velocity CRM | B2B SaaS Interface';
         break;
+      case 'ai':
+        document.title = 'Nova AI | Chat Interface';
+        break;
       default:
         document.title = 'MASTER_AY | Frontend Archive';
     }
@@ -70,6 +75,8 @@ export default function App() {
   if (activeProject === 'nexus') return <><NexusDashboard /><BackButton /></>;
   if (activeProject === 'studio') return <><StudioFolio /><BackButton /></>;
   if (activeProject === 'crm') return <><CrmDashboard /><BackButton /></>;
+  if (activeProject === 'ai') return <><NovaAI /><BackButton /></>;
+  
 
   // --- MAIN DIRECTORY (HOME) ---
   return (
