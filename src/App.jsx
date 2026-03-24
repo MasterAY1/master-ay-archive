@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Box, ShoppingCart, BarChart3, Film, Users, Bot } from 'lucide-react';
+import { ArrowLeft, Box, ShoppingCart, BarChart3, Film, Users, Bot, Wallet } from 'lucide-react';
 
-// Import all 6 of your projects
+// Import all 7 of your projects
 import AuraStore from './AuraStore';
 import LuminaStore from './LuminaStore';
 import NexusDashboard from './NexusDashboard';
 import StudioFolio from './StudioFolio';
 import CrmDashboard from './CrmDashboard';
 import NovaAI from './NovaAI';
+import VaultFinance from './VaultFinance';
 
 export default function App() {
   const [activeProject, setActiveProject] = useState('home');
@@ -31,6 +32,7 @@ export default function App() {
       case 'studio': document.title = 'Studio Folio | Creative Agency'; break;
       case 'crm': document.title = 'Velocity CRM | B2B SaaS Interface'; break;
       case 'ai': document.title = 'Nova AI | Chat Interface'; break;
+      case 'fintech': document.title = 'Vault | FinTech Dashboard'; break;
       default: document.title = 'MASTER_AY | Frontend Archive';
     }
   }, [activeProject]);
@@ -59,6 +61,7 @@ export default function App() {
   if (activeProject === 'studio') return <><StudioFolio /><BackButton /></>;
   if (activeProject === 'crm') return <><CrmDashboard /><BackButton /></>;
   if (activeProject === 'ai') return <><NovaAI /><BackButton /></>;
+  if (activeProject === 'fintech') return <><VaultFinance /><BackButton /></>;
 
   // --- MAIN DIRECTORY (HOME) ---
   return (
@@ -78,7 +81,7 @@ export default function App() {
       </header>
 
       {/* Project Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150 fill-mode-both">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150 fill-mode-both">
         
         {/* Project 1: Aura */}
         <button onClick={() => navigateTo('aura')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
@@ -147,6 +150,18 @@ export default function App() {
           <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
             <span className="bg-white/5 px-3 py-1 rounded-full">Layouts</span>
             <span className="bg-white/5 px-3 py-1 rounded-full">Micro-interactions</span>
+          </div>
+        </button>
+
+        {/* Project 7: FinTech Dashboard */}
+        <button onClick={() => navigateTo('fintech')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#00ff88]/5 rounded-bl-full pointer-events-none group-hover:bg-[#00ff88]/10 transition-colors"></div>
+          <Wallet className="text-[#00ff88] mb-6" size={32} />
+          <h2 className="text-2xl font-bold mb-2">Vault FinTech</h2>
+          <p className="text-gray-500 mb-6">Financial Dashboard & Data Visualization</p>
+          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
+            <span className="bg-white/5 px-3 py-1 rounded-full">Interactive Charts</span>
+            <span className="bg-white/5 px-3 py-1 rounded-full">Data Tables</span>
           </div>
         </button>
 
