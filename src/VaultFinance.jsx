@@ -1,199 +1,248 @@
 import React, { useState } from 'react';
 import { 
-  Wallet, LineChart, Activity, Clock, ArrowUpRight, 
-  ArrowDownRight, CreditCard, Send, Plus, MoreVertical, 
-  Bitcoin, DollarSign, PieChart, TrendingUp, Search 
+  ArrowUpRight, ArrowDownRight, Send, Plus, 
+  RefreshCw, Bell, Search, LayoutGrid, PieChart, 
+  Activity, Settings, CreditCard, ChevronDown, 
+  MoreHorizontal, Wallet
 } from 'lucide-react';
 
-// --- MOCK DATA ---
-const ASSETS = [
-  { id: 1, name: "Bitcoin", symbol: "BTC", balance: "0.452", value: "$29,450.20", change: "+5.2%", isPositive: true },
-  { id: 2, name: "Ethereum", symbol: "ETH", balance: "4.200", value: "$9,240.50", change: "+2.1%", isPositive: true },
-  { id: 3, name: "Solana", symbol: "SOL", balance: "145.0", value: "$14,065.00", change: "-1.4%", isPositive: false },
-  { id: 4, name: "USDC Coin", symbol: "USDC", balance: "5,000", value: "$5,000.00", change: "0.0%", isPositive: true },
+// --- CROSS-ASSET MOCK DATA ---
+const PORTFOLIO_ASSETS = [
+  { id: '1', name: 'EUR/USD', type: 'Forex', balance: '€12,500.00', value: '$13,625.00', change: '+0.45%', isUp: true, color: 'text-blue-400' },
+  { id: '2', name: 'S&P 500 (SPY)', type: 'Index', balance: '24.5 Shares', value: '$12,345.50', change: '+1.20%', isUp: true, color: 'text-purple-400' },
+  { id: '3', name: 'Bitcoin (BTC)', type: 'Crypto', balance: '0.1542 BTC', value: '$10,124.80', change: '-2.15%', isUp: false, color: 'text-orange-400' },
+  { id: '4', name: 'Tesla (TSLA)', type: 'Equity', balance: '45 Shares', value: '$7,850.25', change: '+4.30%', isUp: true, color: 'text-red-400' },
 ];
 
-const TRANSACTIONS = [
-  { id: 1, type: "Received", asset: "BTC", amount: "+0.05 BTC", value: "$3,250.00", date: "Today, 14:30", status: "Completed" },
-  { id: 2, type: "Sent", asset: "ETH", amount: "-1.2 ETH", value: "$2,640.00", date: "Yesterday", status: "Completed" },
-  { id: 3, type: "Swapped", asset: "SOL", amount: "+45 SOL", value: "$4,365.00", date: "Oct 22", status: "Completed" },
-  { id: 4, type: "Deposit", asset: "USD", amount: "+$10,000", value: "$10,000.00", date: "Oct 20", status: "Completed" },
+const RECENT_TRANSACTIONS = [
+  { id: 1, title: "Bought TSLA", category: "Market Order", amount: "-$2,450.00", date: "Today, 09:41 AM", icon: <Activity size={16} /> },
+  { id: 2, title: "EUR/USD Swap", category: "Forex Execution", amount: "+$415.20", date: "Yesterday, 14:20 PM", icon: <RefreshCw size={16} /> },
+  { id: 3, title: "Wire Transfer", category: "Deposit", amount: "+$5,000.00", date: "Oct 22, 10:00 AM", icon: <Plus size={16} /> },
+  { id: 4, title: "BTC Network Fee", category: "Withdrawal", amount: "-$12.45", date: "Oct 20, 18:45 PM", icon: <Send size={16} /> },
 ];
-
-const CHART_DATA = {
-  '1W': [40, 30, 60, 50, 80, 70, 90],
-  '1M': [30, 40, 35, 50, 45, 60, 55, 70, 65, 80, 75, 90],
-  '1Y': [20, 30, 25, 40, 35, 50, 45, 60, 75, 65, 85, 95],
-};
 
 export default function VaultFinance() {
   const [timeframe, setTimeframe] = useState('1W');
-  const activeData = CHART_DATA[timeframe];
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-200 font-sans p-4 md:p-8 selection:bg-[#00ff88]/30">
+    <div className="min-h-screen bg-[#000000] text-gray-100 font-sans flex selection:bg-emerald-500/30">
       
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
-        
-        {/* --- LEFT COLUMN: OVERVIEW & CHART --- */}
-        <div className="flex-1 space-y-8">
+      {/* --- SIDEBAR (Stripe-style Minimalist) --- */}
+      <aside className="w-20 lg:w-64 border-r border-[#1e1e20] bg-[#050505] flex flex-col justify-between z-20 hidden md:flex">
+        <div>
+          <div className="h-20 flex items-center justify-center lg:justify-start lg:px-8 border-b border-[#1e1e20]">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.4)]">
+              <Wallet className="text-black" size={18} strokeWidth={2.5} />
+            </div>
+            <span className="hidden lg:block ml-3 font-bold text-xl tracking-tight text-white">Vault.</span>
+          </div>
           
-          {/* Header */}
-          <header className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#00ff88]/10 rounded-xl flex items-center justify-center border border-[#00ff88]/20">
-                <Wallet className="text-[#00ff88]" size={20} />
-              </div>
-              <h1 className="text-2xl font-bold text-white">Vault Finance</h1>
+          <nav className="p-4 space-y-2 mt-4">
+            <NavItem icon={<LayoutGrid size={20} />} label="Dashboard" active />
+            <NavItem icon={<PieChart size={20} />} label="Portfolio" />
+            <NavItem icon={<RefreshCw size={20} />} label="Trading" />
+            <NavItem icon={<CreditCard size={20} />} label="Cards" />
+          </nav>
+        </div>
+        
+        <div className="p-4 border-t border-[#1e1e20]">
+          <NavItem icon={<Settings size={20} />} label="Settings" />
+          <div className="mt-4 flex items-center justify-center lg:justify-start lg:px-4 cursor-pointer">
+            <div className="w-8 h-8 rounded-full bg-[#1e1e20] border border-[#27272a] flex items-center justify-center font-bold text-xs">AA</div>
+            <div className="hidden lg:block ml-3">
+              <p className="text-sm font-medium text-white">Pro Trader</p>
+              <p className="text-xs text-gray-500">Tier 2 Account</p>
             </div>
-            <div className="flex gap-3">
-              <button className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/5 transition-colors flex items-center gap-2">
-                <Send size={16} /> Send
-              </button>
-              <button className="bg-[#00ff88] hover:bg-[#00e5ff] text-black px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
-                <Plus size={16} /> Deposit
-              </button>
-            </div>
-          </header>
+          </div>
+        </div>
+      </aside>
 
-          {/* Total Balance Card */}
-          <div className="bg-[#111] border border-white/5 rounded-3xl p-8 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#00ff88]/5 rounded-full blur-3xl pointer-events-none group-hover:bg-[#00ff88]/10 transition-colors duration-700"></div>
+      {/* --- MAIN DASHBOARD --- */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        {/* Top Navbar */}
+        <header className="h-20 border-b border-[#1e1e20] bg-[#050505]/80 backdrop-blur-md flex items-center justify-between px-6 lg:px-10 z-10 shrink-0">
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl font-bold text-white hidden sm:block">Overview</h1>
+          </div>
+          
+          <div className="flex items-center gap-4 lg:gap-6">
+            <div className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search assets..." 
+                className="bg-[#0a0a0b] border border-[#27272a] rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-emerald-500 transition-colors w-64 text-white"
+              />
+            </div>
+            <button className="relative text-gray-400 hover:text-white transition-colors">
+              <Bell size={20} />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border-2 border-[#000]"></span>
+            </button>
+          </div>
+        </header>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-6 lg:p-10 custom-scrollbar">
+          <div className="max-w-6xl mx-auto space-y-6">
             
-            <p className="text-gray-400 font-medium mb-2 flex items-center gap-2">
-              Total Portfolio Balance <PieChart size={14} />
-            </p>
-            <div className="flex items-end gap-4 mb-6">
-              <h2 className="text-5xl md:text-6xl font-bold text-white tracking-tight">$57,755.70</h2>
-              <span className="flex items-center text-[#00ff88] bg-[#00ff88]/10 px-2 py-1 rounded-md text-sm font-bold mb-2">
-                <ArrowUpRight size={16} className="mr-1" /> +$4,250 (24h)
-              </span>
-            </div>
+            {/* HERO: Balance & SVG Chart */}
+            <div className="bg-[#09090b] border border-[#1e1e20] rounded-3xl p-6 lg:p-10 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+              
+              <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
+                <div>
+                  <p className="text-gray-400 text-sm font-medium mb-2">Total Equity</p>
+                  <div className="flex items-end gap-4">
+                    <h2 className="text-5xl lg:text-7xl font-bold text-white tracking-tighter">$43,945.55</h2>
+                    <span className="flex items-center text-emerald-400 bg-emerald-400/10 px-2.5 py-1 rounded-lg text-sm font-bold mb-2">
+                      <ArrowUpRight size={16} className="mr-1" /> +2.4%
+                    </span>
+                  </div>
+                </div>
 
-            {/* Dynamic CSS Chart */}
-            <div className="mt-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-medium text-white flex items-center gap-2"><LineChart size={16}/> Performance</h3>
-                <div className="flex bg-black border border-white/10 rounded-lg p-1">
-                  {['1W', '1M', '1Y'].map(tf => (
+                <div className="flex gap-3">
+                  <ActionButton icon={<Plus size={16} />} label="Deposit" primary />
+                  <ActionButton icon={<Send size={16} />} label="Transfer" />
+                  <ActionButton icon={<RefreshCw size={16} />} label="Trade" />
+                </div>
+              </div>
+
+              {/* High-End SVG Bezier Curve Chart */}
+              <div className="h-48 w-full relative group mt-10 border-b border-[#1e1e20] pb-2">
+                <div className="absolute top-0 right-0 flex bg-[#1e1e20]/50 rounded-lg p-1 z-10 backdrop-blur-sm">
+                  {['1D', '1W', '1M', '1Y', 'ALL'].map(tf => (
                     <button 
-                      key={tf}
-                      onClick={() => setTimeframe(tf)}
-                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${timeframe === tf ? 'bg-[#222] text-white' : 'text-gray-500 hover:text-white'}`}
+                      key={tf} onClick={() => setTimeframe(tf)}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${timeframe === tf ? 'bg-[#27272a] text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
                     >
                       {tf}
                     </button>
                   ))}
                 </div>
+                
+                {/* SVG Graph rendering */}
+                <svg viewBox="0 0 1000 200" className="w-full h-full preserve-3d drop-shadow-[0_0_15px_rgba(16,185,129,0.2)]" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.2"/>
+                      <stop offset="100%" stopColor="#10b981" stopOpacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  {/* Fill */}
+                  <path d="M0 150 Q 150 180, 250 120 T 500 80 T 750 100 T 1000 30 L 1000 200 L 0 200 Z" fill="url(#chartGradient)" className="transition-all duration-1000 ease-in-out" />
+                  {/* Stroke */}
+                  <path d="M0 150 Q 150 180, 250 120 T 500 80 T 750 100 T 1000 30" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-1000 ease-in-out" />
+                  
+                  {/* Interactive Graph Tooltip Point */}
+                  <circle cx="1000" cy="30" r="6" fill="#000" stroke="#10b981" strokeWidth="3" className="animate-pulse" />
+                </svg>
               </div>
+            </div>
+
+            {/* BENTO GRID: Portfolio & Activity */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               
-              {/* The actual chart bars */}
-              <div className="h-48 flex items-end gap-2 w-full pt-4">
-                {activeData.map((val, i) => (
-                  <div key={`${timeframe}-${i}`} className="flex-1 flex flex-col justify-end h-full group/bar">
-                    <div 
-                      className="w-full bg-[#00ff88]/20 rounded-t-sm group-hover/bar:bg-[#00ff88] transition-all duration-500 ease-out relative"
-                      style={{ height: `${val}%` }}
-                    >
-                      {/* Tooltip on hover */}
-                      <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none">
-                        ${(val * 850).toLocaleString()}
+              {/* Assets Breakdown */}
+              <div className="xl:col-span-2 bg-[#09090b] border border-[#1e1e20] rounded-3xl p-6 lg:p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-white">Open Positions</h3>
+                  <button className="text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1">
+                    View All <ArrowUpRight size={14} />
+                  </button>
+                </div>
+                
+                <div className="space-y-2">
+                  {PORTFOLIO_ASSETS.map((asset) => (
+                    <div key={asset.id} className="group flex items-center justify-between p-4 rounded-2xl hover:bg-[#121214] border border-transparent hover:border-[#1e1e20] transition-all cursor-pointer">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-full bg-[#1e1e20] flex items-center justify-center font-bold text-sm ${asset.color}`}>
+                          {asset.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-white group-hover:text-emerald-400 transition-colors">{asset.name}</p>
+                          <p className="text-xs text-gray-500 font-medium">{asset.type} • {asset.balance}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <p className="font-bold text-white">{asset.value}</p>
+                        <p className={`text-xs font-bold ${asset.isUp ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {asset.change}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent Transactions */}
+              <div className="bg-[#09090b] border border-[#1e1e20] rounded-3xl p-6 lg:p-8">
+                <h3 className="text-lg font-bold text-white mb-6">Recent History</h3>
+                <div className="space-y-6">
+                  {RECENT_TRANSACTIONS.map((tx) => (
+                    <div key={tx.id} className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 p-2 bg-[#1e1e20] rounded-lg text-gray-400">
+                          {tx.icon}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">{tx.title}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{tx.category}</p>
+                          <p className="text-[10px] text-gray-600 mt-1">{tx.date}</p>
+                        </div>
+                      </div>
+                      <span className={`text-sm font-bold ${tx.amount.includes('+') ? 'text-emerald-400' : 'text-white'}`}>
+                        {tx.amount}
                       </span>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <button className="w-full mt-6 py-3 border border-[#1e1e20] text-gray-300 text-sm font-bold rounded-xl hover:bg-[#1e1e20] hover:text-white transition-colors">
+                  View Statements
+                </button>
               </div>
+
             </div>
           </div>
-
-          {/* Transaction History */}
-          <div>
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Clock size={18}/> Recent Activity</h3>
-            <div className="bg-[#111] border border-white/5 rounded-2xl overflow-hidden">
-              {TRANSACTIONS.map((tx, i) => (
-                <div key={tx.id} className={`flex items-center justify-between p-4 hover:bg-white/5 transition-colors cursor-pointer ${i !== TRANSACTIONS.length - 1 ? 'border-b border-white/5' : ''}`}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[#1a1a1c] flex items-center justify-center border border-white/5">
-                      {tx.type === 'Received' || tx.type === 'Deposit' ? <ArrowDownRight size={18} className="text-[#00ff88]" /> : 
-                       tx.type === 'Sent' ? <ArrowUpRight size={18} className="text-red-400" /> : 
-                       <Activity size={18} className="text-blue-400" />}
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">{tx.type} {tx.asset}</p>
-                      <p className="text-xs text-gray-500">{tx.date}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-medium ${tx.type === 'Received' || tx.type === 'Deposit' ? 'text-[#00ff88]' : 'text-white'}`}>{tx.amount}</p>
-                    <p className="text-xs text-gray-500">{tx.value}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
 
-        {/* --- RIGHT COLUMN: ASSETS --- */}
-        <div className="w-full lg:w-96 space-y-6">
-          <div className="bg-[#111] border border-white/5 rounded-3xl p-6">
-            <h3 className="text-lg font-bold text-white mb-6 flex items-center justify-between">
-              Your Assets
-              <button className="text-gray-500 hover:text-white transition-colors"><MoreVertical size={16}/></button>
-            </h3>
-            
-            <div className="space-y-4">
-              {ASSETS.map((asset) => (
-                <div key={asset.id} className="p-4 bg-[#1a1a1c] border border-white/5 rounded-2xl hover:border-white/20 transition-all cursor-pointer group">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white text-xs font-bold border border-white/10 group-hover:scale-110 transition-transform">
-                        {asset.symbol.charAt(0)}
-                      </div>
-                      <div>
-                        <h4 className="text-white font-bold">{asset.name}</h4>
-                        <p className="text-xs text-gray-500">{asset.symbol}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <h4 className="text-white font-bold">{asset.value}</h4>
-                      <p className="text-xs text-gray-500">{asset.balance} {asset.symbol}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Mini Trend Line */}
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="h-8 w-24 flex items-end gap-1 opacity-60">
-                      {[4, 7, 5, 8, 6, 9, 10].map((bar, i) => (
-                        <div key={i} className={`w-full rounded-sm ${asset.isPositive ? 'bg-[#00ff88]' : 'bg-red-500'}`} style={{ height: `${bar * 10}%` }}></div>
-                      ))}
-                    </div>
-                    <span className={`text-xs font-bold px-2 py-1 rounded-md ${asset.isPositive ? 'text-[#00ff88] bg-[#00ff88]/10' : 'text-red-400 bg-red-400/10'}`}>
-                      {asset.change}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <button className="w-full mt-6 py-3 border border-white/10 text-white font-bold rounded-xl hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
-              <Search size={16} /> Explore Assets
-            </button>
-          </div>
-          
-          {/* Quick Action Card */}
-          <div className="bg-gradient-to-br from-[#00ff88]/20 to-[#00e5ff]/20 border border-[#00ff88]/30 rounded-3xl p-6 relative overflow-hidden">
-            <TrendingUp className="absolute -right-4 -bottom-4 text-[#00ff88] opacity-20 w-32 h-32" />
-            <h3 className="text-xl font-bold text-white mb-2 relative z-10">Earn Yield</h3>
-            <p className="text-gray-300 text-sm mb-6 relative z-10">Stake your crypto assets and earn up to 8.5% APY paid out daily.</p>
-            <button className="bg-white text-black px-4 py-2 rounded-lg text-sm font-bold transition-colors w-fit relative z-10">
-              Start Earning
-            </button>
-          </div>
-          
-        </div>
+      </main>
 
-      </div>
+      {/* Global Scrollbar Styles */}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+      `}</style>
     </div>
+  );
+}
+
+// --- SUB-COMPONENTS ---
+
+function NavItem({ icon, label, active }) {
+  return (
+    <button className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all group ${
+      active ? 'bg-[#1e1e20] text-white shadow-sm' : 'text-gray-500 hover:bg-[#121214] hover:text-white'
+    }`}>
+      <div className={`${active ? 'text-emerald-400' : 'group-hover:text-emerald-400 transition-colors'}`}>
+        {icon}
+      </div>
+      <span className="hidden lg:block text-sm font-semibold">{label}</span>
+    </button>
+  );
+}
+
+function ActionButton({ icon, label, primary }) {
+  return (
+    <button className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 ${
+      primary 
+        ? 'bg-emerald-500 text-black hover:bg-emerald-400 shadow-[0_4px_14px_rgba(16,185,129,0.3)]' 
+        : 'bg-[#1e1e20] text-white hover:bg-[#27272a] border border-[#27272a]'
+    }`}>
+      {icon} {label}
+    </button>
   );
 }
