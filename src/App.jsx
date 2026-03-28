@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Box, ShoppingCart, BarChart3, Film, Users, Bot, Wallet } from 'lucide-react';
+import { ArrowLeft, Box, ShoppingCart, BarChart3, Film, Users, Bot, Wallet, Home } from 'lucide-react';
 
-// Import all 7 of your projects
+// Import ALL 8 of your projects
 import AuraStore from './AuraStore';
 import LuminaStore from './LuminaStore';
 import NexusDashboard from './NexusDashboard';
@@ -9,11 +9,11 @@ import StudioFolio from './StudioFolio';
 import CrmDashboard from './CrmDashboard';
 import NovaAI from './NovaAI';
 import VaultFinance from './VaultFinance';
+import HavenBooking from './HavenBooking';
 
 export default function App() {
   const [activeProject, setActiveProject] = useState('home');
 
-  // 1. Check the URL when the site first loads
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const project = params.get('p');
@@ -22,7 +22,6 @@ export default function App() {
     }
   }, []);
 
-  // 2. Dynamically update the browser tab title
   useEffect(() => {
     switch (activeProject) {
       case 'home': document.title = 'MASTER_AY | Frontend Archive'; break;
@@ -33,18 +32,17 @@ export default function App() {
       case 'crm': document.title = 'Velocity CRM | B2B SaaS Interface'; break;
       case 'ai': document.title = 'Nova AI | Chat Interface'; break;
       case 'fintech': document.title = 'Vault | FinTech Dashboard'; break;
+      case 'booking': document.title = 'Haven | Real Estate UI'; break;
       default: document.title = 'MASTER_AY | Frontend Archive';
     }
   }, [activeProject]);
 
-  // 3. Function to change the URL without reloading the page
   const navigateTo = (projectId) => {
     const newUrl = projectId === 'home' ? '/' : `/?p=${projectId}`;
     window.history.pushState({}, '', newUrl);
     setActiveProject(projectId);
   };
 
-  // --- FLOATING BACK BUTTON ---
   const BackButton = () => (
     <button 
       onClick={() => navigateTo('home')}
@@ -54,7 +52,7 @@ export default function App() {
     </button>
   );
 
-  // --- ROUTER LOGIC ---
+  // --- ROUTER LOGIC (All 8 Projects) ---
   if (activeProject === 'aura') return <><AuraStore /><BackButton /></>;
   if (activeProject === 'lumina') return <><LuminaStore /><BackButton /></>;
   if (activeProject === 'nexus') return <><NexusDashboard /><BackButton /></>;
@@ -62,12 +60,11 @@ export default function App() {
   if (activeProject === 'crm') return <><CrmDashboard /><BackButton /></>;
   if (activeProject === 'ai') return <><NovaAI /><BackButton /></>;
   if (activeProject === 'fintech') return <><VaultFinance /><BackButton /></>;
+  if (activeProject === 'booking') return <><HavenBooking /><BackButton /></>;
 
-  // --- MAIN DIRECTORY (HOME) ---
   return (
     <div className="min-h-screen bg-[#050505] text-white p-6 md:p-16 lg:p-24 font-sans selection:bg-white selection:text-black">
       
-      {/* Header */}
       <header className="mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6">
           MASTER_AY <br/>
@@ -76,93 +73,68 @@ export default function App() {
           </span>
         </h1>
         <p className="text-gray-400 max-w-2xl text-lg md:text-xl font-light leading-relaxed">
-          A collection of production-ready interfaces, interactive 3D experiences, and complex state architectures built with React and Tailwind CSS.
+          A master collection of production-ready interfaces, complex state architectures, and interactive UIs built with React and Tailwind CSS.
         </p>
       </header>
 
-      {/* Project Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150 fill-mode-both">
+      {/* Grid updated to lg:grid-cols-4 so the 8 projects form two perfect rows of 4! */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150 fill-mode-both">
         
-        {/* Project 1: Aura */}
         <button onClick={() => navigateTo('aura')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#00e5ff]/5 rounded-bl-full pointer-events-none group-hover:bg-[#00e5ff]/10 transition-colors"></div>
           <Box className="text-[#00e5ff] mb-6" size={32} />
           <h2 className="text-2xl font-bold mb-2">Aura Immersive</h2>
-          <p className="text-gray-500 mb-6">WebGL 3D Product Storefront</p>
-          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
-            <span className="bg-white/5 px-3 py-1 rounded-full">React Three Fiber</span>
-          </div>
+          <p className="text-gray-500 mb-6 text-sm">WebGL 3D Product Storefront</p>
         </button>
 
-        {/* Project 2: Lumina */}
         <button onClick={() => navigateTo('lumina')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-bl-full pointer-events-none group-hover:bg-orange-500/10 transition-colors"></div>
           <ShoppingCart className="text-orange-500 mb-6" size={32} />
-          <h2 className="text-2xl font-bold mb-2">Lumina E-Commerce</h2>
-          <p className="text-gray-500 mb-6">State-Driven Shopping Cart UI</p>
-          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
-            <span className="bg-white/5 px-3 py-1 rounded-full">React State</span>
-            <span className="bg-white/5 px-3 py-1 rounded-full">Tailwind CSS</span>
-          </div>
+          <h2 className="text-2xl font-bold mb-2">Lumina Store</h2>
+          <p className="text-gray-500 mb-6 text-sm">State-Driven Shopping Cart</p>
         </button>
 
-        {/* Project 3: Nexus */}
         <button onClick={() => navigateTo('nexus')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#8b5cf6]/5 rounded-bl-full pointer-events-none group-hover:bg-[#8b5cf6]/10 transition-colors"></div>
           <BarChart3 className="text-[#8b5cf6] mb-6" size={32} />
           <h2 className="text-2xl font-bold mb-2">Nexus Analytics</h2>
-          <p className="text-gray-500 mb-6">Enterprise Data Dashboard (SPA)</p>
-          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
-            <span className="bg-white/5 px-3 py-1 rounded-full">Recharts</span>
-            <span className="bg-white/5 px-3 py-1 rounded-full">Routing</span>
-          </div>
+          <p className="text-gray-500 mb-6 text-sm">Enterprise Data Dashboard</p>
         </button>
 
-        {/* Project 4: Studio */}
         <button onClick={() => navigateTo('studio')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full pointer-events-none group-hover:bg-white/10 transition-colors"></div>
           <Film className="text-white mb-6" size={32} />
           <h2 className="text-2xl font-bold mb-2">Studio Folio</h2>
-          <p className="text-gray-500 mb-6">Interactive Creative Agency Layout</p>
-          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
-            <span className="bg-white/5 px-3 py-1 rounded-full">Micro-interactions</span>
-          </div>
+          <p className="text-gray-500 mb-6 text-sm">Interactive Creative Agency Layout</p>
         </button>
 
-        {/* Project 5: CRM Dashboard */}
         <button onClick={() => navigateTo('crm')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/5 rounded-bl-full pointer-events-none group-hover:bg-pink-500/10 transition-colors"></div>
           <Users className="text-pink-500 mb-6" size={32} />
           <h2 className="text-2xl font-bold mb-2">Velocity CRM</h2>
-          <p className="text-gray-500 mb-6">B2B SaaS Pipeline & Interaction Design</p>
-          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
-            <span className="bg-white/5 px-3 py-1 rounded-full">UI/UX</span>
-            <span className="bg-white/5 px-3 py-1 rounded-full">React Flow</span>
-          </div>
+          <p className="text-gray-500 mb-6 text-sm">B2B SaaS Pipeline & Routing</p>
         </button>
 
-        {/* Project 6: AI Interface */}
         <button onClick={() => navigateTo('ai')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-bl-full pointer-events-none group-hover:bg-indigo-500/10 transition-colors"></div>
           <Bot className="text-indigo-500 mb-6" size={32} />
-          <h2 className="text-2xl font-bold mb-2">Nova AI Wrapper</h2>
-          <p className="text-gray-500 mb-6">SaaS Chat Interface & Simulated Loading States</p>
-          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
-            <span className="bg-white/5 px-3 py-1 rounded-full">Layouts</span>
-            <span className="bg-white/5 px-3 py-1 rounded-full">Micro-interactions</span>
-          </div>
+          <h2 className="text-2xl font-bold mb-2">Nova AI Interface</h2>
+          <p className="text-gray-500 mb-6 text-sm">SaaS Chat & Loading States</p>
         </button>
 
-        {/* Project 7: FinTech Dashboard */}
         <button onClick={() => navigateTo('fintech')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#00ff88]/5 rounded-bl-full pointer-events-none group-hover:bg-[#00ff88]/10 transition-colors"></div>
           <Wallet className="text-[#00ff88] mb-6" size={32} />
           <h2 className="text-2xl font-bold mb-2">Vault FinTech</h2>
-          <p className="text-gray-500 mb-6">Financial Dashboard & Data Visualization</p>
-          <div className="flex gap-2 text-xs font-mono text-gray-400 flex-wrap">
-            <span className="bg-white/5 px-3 py-1 rounded-full">Interactive Charts</span>
-            <span className="bg-white/5 px-3 py-1 rounded-full">Data Tables</span>
-          </div>
+          <p className="text-gray-500 mb-6 text-sm">Live Trade Engine & Data Viz</p>
+        </button>
+
+        {/* The Final Project */}
+        <button onClick={() => navigateTo('booking')} className="group text-left bg-[#111] border border-white/5 hover:border-white/20 p-8 rounded-3xl transition-all hover:-translate-y-2 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-bl-full pointer-events-none group-hover:bg-rose-500/10 transition-colors"></div>
+          <Home className="text-rose-500 mb-6" size={32} />
+          <h2 className="text-2xl font-bold mb-2">Haven Booking</h2>
+          <p className="text-gray-500 mb-6 text-sm">Complex Search & Image Carousels</p>
         </button>
 
       </div>
