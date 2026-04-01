@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
-  ArrowUpRight, ArrowDownRight, Send, Plus, 
-  RefreshCw, Bell, Search, LayoutGrid, PieChart, 
-  Activity, Settings, CreditCard, Wallet, X,
-  Zap
+  Send, Plus, RefreshCw, Bell, Search, LayoutGrid, 
+  PieChart, Activity, Settings, Wallet, X, Zap, Menu, ChevronRight
 } from 'lucide-react';
 
 // --- INITIAL STATE DATA ---
@@ -14,113 +12,118 @@ const INITIAL_ASSETS = [
   { id: '4', name: 'Tesla (TSLA)', type: 'Equity', balance: 45, value: 7850.25, cost: 6500.00, change: '+4.30%', isUp: true, color: 'text-red-400', ticker: 'TSLA' },
 ];
 
-const INITIAL_TRANSACTIONS = [
-  { id: 1, title: "Bought TSLA", category: "Market Order", amount: -2450.00, date: "Today, 09:41 AM", icon: <Activity size={16} /> },
-  { id: 2, title: "EUR/USD Swap", category: "Forex Execution", amount: +415.20, date: "Yesterday, 14:20 PM", icon: <RefreshCw size={16} /> },
-];
-
 const MARKET_NEWS = [
-  "Fed announces unexpected rate hike",
-  "Bitcoin ETF trading volume spikes",
-  "Tesla earnings beat Wall Street expectations",
-  "Forex volatility increases on job report",
-  "S&P 500 reaches new all-time high",
-  "Whale moves $500M in BTC off exchange"
+  "Fed announces unexpected rate hike", "Bitcoin ETF trading volume spikes",
+  "Tesla earnings beat Wall Street expectations", "Forex volatility increases on job report"
 ];
 
 export default function VaultFinance() {
-  const [buyingPower, setBuyingPower] = useState(25000.00);
+  // --- CORE STATE ---
+  const [buyingPower, setBuyingPower] = useState(0);
   const [assets, setAssets] = useState(INITIAL_ASSETS);
-  const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
-  const [notifications, setNotifications] = useState(false);
+  const [transactions, setTransactions] = useState([]);
   
+  // --- UI INTERACTION STATE ---
+  const [activeTab, setActiveTab] = useState('Terminal');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [activeChartAsset, setActiveChartAsset] = useState({ name: 'Total Net Liquidation', isTotal: true });
+  
+  // --- MODAL STATE ---
   const [isTradeOpen, setIsTradeOpen] = useState(false);
   const [tradeAction, setTradeAction] = useState('Buy'); 
   const [selectedAsset, setSelectedAsset] = useState(INITIAL_ASSETS[0]);
   const [tradeAmount, setTradeAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false); 
 
-  // --- ENGINE 1: LIVE MARKET TICKER ---
+  // --- ENGINE 1: FULL-STACK BACKEND CONNECTION ---
+  useEffect(() => {
+    fetch('http://localhost:8000/api/portfolio')
+      .then(res => res.json())
+      .then(data => setBuyingPower(data.buying_power))
+      .catch(err => console.error("API Error:", err));
+  }, []);
+
+  // --- ENGINE 2: LIVE MARKET TICKER ---
   useEffect(() => {
     const interval = setInterval(() => {
-      setAssets(prevAssets => 
-        prevAssets.map(asset => {
-          const changePercent = (Math.random() - 0.5) * 0.01; 
-          const newValue = asset.value * (1 + changePercent);
-          return {
-            ...asset,
-            value: newValue,
-            change: `${changePercent >= 0 ? '+' : ''}${(changePercent * 100).toFixed(2)}%`,
-            isUp: changePercent >= 0
-          };
-        })
-      );
+      setAssets(prev => prev.map(asset => {
+        const changePercent = (Math.random() - 0.5) * 0.01; 
+        return {
+          ...asset,
+          value: asset.value * (1 + changePercent),
+          change: `${changePercent >= 0 ? '+' : ''}${(changePercent * 100).toFixed(2)}%`,
+          isUp: changePercent >= 0
+        };
+      }));
     }, 2500); 
     return () => clearInterval(interval);
   }, []);
 
-  // --- ENGINE 2: NEWS FEED ---
+  // --- ENGINE 3: LIVE NEWS ALERTS ---
   useEffect(() => {
     const eventInterval = setInterval(() => {
       const randomEvent = MARKET_NEWS[Math.floor(Math.random() * MARKET_NEWS.length)];
       const newTx = {
-        id: Date.now(), title: "Market News", category: randomEvent, amount: 0,
+        id: Date.now(), title: "Market Alert", category: randomEvent, amount: 0,
         date: "Just now", icon: <Bell size={16} className="text-yellow-400" />
       };
       setTransactions(prev => [newTx, ...prev].slice(0, 20)); 
-      setNotifications(true); 
-      setTimeout(() => setNotifications(false), 2000);
-    }, 15000); 
+    }, 20000); 
     return () => clearInterval(eventInterval);
   }, []);
 
-  const totalEquity = buyingPower + assets.reduce((sum, asset) => sum + asset.value, 0);
-
-  // --- ENGINE 3: TRADE EXECUTION ---
-  const handleExecuteTrade = (e) => {
+  // --- ENGINE 4: TRADE EXECUTION (POST TO PYTHON) ---
+  const handleExecuteTrade = async (e) => {
     e.preventDefault();
     const amount = parseFloat(tradeAmount);
     if (isNaN(amount) || amount <= 0) return alert("Please enter a valid amount");
-    if (tradeAction === 'Buy' && amount > buyingPower) return alert("⚠️ Insufficient Buying Power!");
-    if (tradeAction === 'Sell' && amount > selectedAsset.value) return alert("⚠️ Insufficient Asset Balance!");
 
     setIsProcessing(true); 
+    try {
+      const response = await fetch('http://localhost:8000/api/trade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, action: tradeAction })
+      });
+      const data = await response.json();
+      if (data.status === "error") { alert("⚠️ " + data.message); return; }
 
-    setTimeout(() => {
-      if (tradeAction === 'Buy') {
-        setBuyingPower(prev => prev - amount);
-        setAssets(assets.map(a => a.id === selectedAsset.id ? { ...a, value: a.value + amount, cost: a.cost + amount } : a));
-      } else {
-        setBuyingPower(prev => prev + amount);
-        setAssets(assets.map(a => a.id === selectedAsset.id ? { ...a, value: a.value - amount, cost: Math.max(0, a.cost - amount) } : a));
-      }
+      setBuyingPower(data.new_buying_power);
+      setAssets(assets.map(a => a.id === selectedAsset.id ? { 
+        ...a, 
+        value: tradeAction === 'Buy' ? a.value + amount : a.value - amount,
+        cost: tradeAction === 'Buy' ? a.cost + amount : Math.max(0, a.cost - amount) 
+      } : a));
 
-      const newTx = {
+      setTransactions(prev => [{
         id: Date.now(), title: `${tradeAction} ${selectedAsset.ticker}`, category: "Market Execution",
         amount: tradeAction === 'Buy' ? -amount : +amount, date: "Just now",
         icon: tradeAction === 'Buy' ? <Activity size={16} className="text-blue-400"/> : <RefreshCw size={16} className="text-purple-400"/>
-      };
-      setTransactions(prev => [newTx, ...prev]);
+      }, ...prev]);
 
-      setIsProcessing(false);
-      setTradeAmount('');
-      setIsTradeOpen(false);
-    }, 800);
+    } catch (error) {
+      console.error("Trade failed:", error);
+    } finally {
+      setIsProcessing(false); setTradeAmount(''); setIsTradeOpen(false);
+    }
   };
 
-  const openQuickTrade = (asset, action) => {
-    setSelectedAsset(asset);
-    setTradeAction(action);
-    setIsTradeOpen(true);
-  };
-
+  const totalEquity = buyingPower + assets.reduce((sum, asset) => sum + asset.value, 0);
   const formatMoney = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
 
+  // --- SEARCH FILTERING ---
+  const filteredAssets = assets.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.ticker.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  // Determine what value the chart is currently tracking
+  const currentChartValue = activeChartAsset.isTotal ? totalEquity : (assets.find(a => a.id === activeChartAsset.id)?.value || totalEquity);
+
   return (
-    <div className="min-h-screen bg-[#000000] text-gray-100 font-sans flex selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-[#000000] text-gray-100 font-sans flex selection:bg-emerald-500/30 overflow-hidden">
       
-      {/* SIDEBAR */}
-      <aside className="w-20 lg:w-64 border-r border-[#1e1e20] bg-[#050505] flex flex-col justify-between z-20 hidden md:flex">
+      {/* --- DESKTOP SIDEBAR --- */}
+      <aside className="w-20 lg:w-64 border-r border-[#1e1e20] bg-[#050505] flex-col justify-between z-30 hidden md:flex shrink-0 h-screen">
         <div>
           <div className="h-20 flex items-center justify-center lg:justify-start lg:px-8 border-b border-[#1e1e20]">
             <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.4)]">
@@ -129,70 +132,196 @@ export default function VaultFinance() {
             <span className="hidden lg:block ml-3 font-bold text-xl tracking-tight text-white">Vault.</span>
           </div>
           <nav className="p-4 space-y-2 mt-4">
-            <NavItem icon={<LayoutGrid size={20} />} label="Terminal" active />
-            <NavItem icon={<PieChart size={20} />} label="Portfolio" />
-            <NavItem icon={<Zap size={20} />} label="Quick Trade" />
+            <NavItem icon={<LayoutGrid size={20} />} label="Terminal" active={activeTab === 'Terminal'} onClick={() => setActiveTab('Terminal')} />
+            <NavItem icon={<PieChart size={20} />} label="Portfolio" active={activeTab === 'Portfolio'} onClick={() => setActiveTab('Portfolio')} />
+            <NavItem icon={<Settings size={20} />} label="Settings" active={activeTab === 'Settings'} onClick={() => setActiveTab('Settings')} />
           </nav>
         </div>
       </aside>
 
-      {/* MAIN DASHBOARD */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="h-20 border-b border-[#1e1e20] bg-[#050505]/80 backdrop-blur-md flex items-center justify-between px-6 lg:px-10 z-10 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-            <h1 className="text-xl font-bold text-white hidden sm:block">Live Trading Terminal</h1>
+      {/* --- MOBILE SIDEBAR OVERLAY --- */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <aside className="relative w-64 bg-[#050505] border-r border-[#1e1e20] h-full flex flex-col justify-between animate-in slide-in-from-left duration-300">
+            <div>
+              <div className="h-20 flex items-center px-8 border-b border-[#1e1e20] justify-between">
+                <div className="flex items-center">
+                  <Wallet className="text-emerald-500 mr-3" size={24} />
+                  <span className="font-bold text-xl text-white">Vault.</span>
+                </div>
+                <button onClick={() => setIsMobileMenuOpen(false)}><X size={24} className="text-gray-400" /></button>
+              </div>
+              <nav className="p-4 space-y-2">
+                <NavItem icon={<LayoutGrid size={20} />} label="Terminal" active={activeTab === 'Terminal'} onClick={() => { setActiveTab('Terminal'); setIsMobileMenuOpen(false); }} />
+                <NavItem icon={<PieChart size={20} />} label="Portfolio" active={activeTab === 'Portfolio'} onClick={() => { setActiveTab('Portfolio'); setIsMobileMenuOpen(false); }} />
+                <NavItem icon={<Settings size={20} />} label="Settings" active={activeTab === 'Settings'} onClick={() => { setActiveTab('Settings'); setIsMobileMenuOpen(false); }} />
+              </nav>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* --- MAIN CONTENT AREA --- */}
+      <main className="flex-1 flex flex-col h-screen relative">
+        
+        {/* --- TOP NAVBAR --- */}
+        <header className="h-20 border-b border-[#1e1e20] bg-[#050505]/80 backdrop-blur-md flex items-center justify-between px-4 lg:px-10 z-20 shrink-0">
+          <div className="flex items-center gap-4">
+            <button className="md:hidden text-white" onClick={() => setIsMobileMenuOpen(true)}>
+              <Menu size={24} />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse hidden sm:block"></div>
+              <h1 className="text-lg lg:text-xl font-bold text-white hidden sm:block">{activeTab}</h1>
+            </div>
           </div>
-          <div className="flex items-center gap-6">
+          
+          <div className="flex items-center gap-4 lg:gap-6">
+            {/* Interactive Search Bar */}
+            <div className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+              <input 
+                type="text" placeholder="Search assets..." 
+                value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-[#121214] border border-[#27272a] rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white w-64 transition-all"
+              />
+            </div>
+            
             <div className="text-right hidden sm:block">
               <p className="text-xs text-gray-500 uppercase tracking-wider">Buying Power</p>
               <p className="text-sm font-bold text-emerald-400">{formatMoney(buyingPower)}</p>
             </div>
-            <button className="relative text-gray-400 hover:text-white transition-colors">
-              <Bell size={20} className={notifications ? 'text-yellow-400 animate-bounce' : ''} />
-              {notifications && <span className="absolute top-0 right-0 w-2 h-2 bg-yellow-400 rounded-full border-2 border-[#000]"></span>}
-            </button>
+            
+            {/* Notifications Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                className="relative p-2 text-gray-400 hover:text-white transition-colors bg-[#121214] rounded-full border border-[#27272a]"
+              >
+                <Bell size={18} />
+                {transactions.some(tx => tx.amount === 0) && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-[#000]"></span>}
+              </button>
+
+              {isNotificationsOpen && (
+                <div className="absolute right-0 mt-4 w-80 bg-[#09090b] border border-[#27272a] rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="p-4 border-b border-[#1e1e20] flex justify-between items-center bg-[#121214]">
+                    <h4 className="font-bold text-white">Notifications</h4>
+                    <button onClick={() => setIsNotificationsOpen(false)}><X size={16} className="text-gray-500"/></button>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto custom-scrollbar p-2">
+                    {transactions.filter(tx => tx.amount === 0).length === 0 ? (
+                      <p className="text-center text-gray-500 py-4 text-sm">No new alerts</p>
+                    ) : (
+                      transactions.filter(tx => tx.amount === 0).map(tx => (
+                        <div key={tx.id} className="p-3 hover:bg-[#121214] rounded-xl transition-colors cursor-pointer mb-1">
+                          <p className="text-sm font-bold text-white">{tx.category}</p>
+                          <p className="text-xs text-gray-500 mt-1">{tx.date}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6 lg:p-10 custom-scrollbar relative">
-          <div className="max-w-6xl mx-auto space-y-6">
+        {/* --- SCROLLABLE CONTENT AREA --- */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-10 custom-scrollbar relative bg-[#000000]">
+          
+          {/* DYNAMIC VIEW ROUTER */}
+          {activeTab === 'Settings' ? (
+             <div className="max-w-3xl mx-auto py-10 text-center animate-in fade-in">
+               <Settings size={48} className="mx-auto text-gray-600 mb-4" />
+               <h2 className="text-2xl font-bold text-white mb-2">Account Settings</h2>
+               <p className="text-gray-500">Connect bank accounts, manage API keys, and update security preferences here.</p>
+             </div>
+          ) : activeTab === 'Portfolio' ? (
+             <div className="max-w-6xl mx-auto animate-in fade-in">
+               <h2 className="text-2xl font-bold text-white mb-6">Your Portfolio Breakdown</h2>
+               {/* Just reusing the asset cards in a grid for the portfolio view */}
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 {assets.map(asset => (
+                   <div key={asset.id} className="bg-[#09090b] border border-[#1e1e20] p-6 rounded-3xl">
+                     <div className={`w-12 h-12 rounded-xl bg-[#1e1e20] flex items-center justify-center font-bold text-lg mb-4 ${asset.color}`}>{asset.ticker.charAt(0)}</div>
+                     <h3 className="font-bold text-white text-xl">{asset.name}</h3>
+                     <p className="text-gray-500 text-sm mb-4">{asset.balance} {asset.ticker}</p>
+                     <p className="text-3xl font-bold text-white mb-2">{formatMoney(asset.value)}</p>
+                     <p className={`text-sm font-bold ${asset.isUp ? 'text-emerald-400' : 'text-red-400'}`}>{asset.change} All Time</p>
+                   </div>
+                 ))}
+               </div>
+             </div>
+          ) : (
+          
+          // --- TERMINAL VIEW (DEFAULT) ---
+          <div className="max-w-7xl mx-auto space-y-6 pb-20 animate-in fade-in">
             
-            {/* HERO: Live Net Liq & CANDLESTICK CHART */}
+            {/* THE CHART HERO */}
             <div className="bg-[#09090b] border border-[#1e1e20] rounded-3xl p-6 lg:p-10 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+              
               <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
                 <div>
-                  <p className="text-gray-400 text-sm font-medium mb-2 flex items-center gap-2">
-                    Net Liquidation Value <span className="text-[10px] bg-[#1e1e20] px-2 py-0.5 rounded text-emerald-400 animate-pulse">LIVE</span>
-                  </p>
-                  <h2 className="text-5xl lg:text-7xl font-bold text-white tracking-tighter transition-all duration-300">
-                    {formatMoney(totalEquity)}
+                  <div className="flex items-center gap-3 mb-2">
+                    <p className="text-gray-400 text-sm font-medium">{activeChartAsset.name}</p>
+                    {activeChartAsset.isTotal && <span className="text-[10px] bg-[#1e1e20] px-2 py-0.5 rounded text-emerald-400 animate-pulse">LIVE</span>}
+                    {!activeChartAsset.isTotal && (
+                      <button onClick={() => setActiveChartAsset({ name: 'Total Net Liquidation', isTotal: true })} className="text-[10px] bg-[#27272a] hover:bg-[#3f3f46] px-2 py-0.5 rounded text-white transition-colors">Reset View</button>
+                    )}
+                  </div>
+                  <h2 className="text-4xl lg:text-6xl font-bold text-white tracking-tighter transition-all duration-300">
+                    {formatMoney(currentChartValue)}
                   </h2>
                 </div>
-                <div className="flex gap-3">
-                  <button onClick={() => setIsTradeOpen(true)} className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-emerald-500 text-black hover:bg-emerald-400 shadow-[0_4px_14px_rgba(16,185,129,0.3)] transition-all hover:-translate-y-0.5">
-                    <Zap size={16} /> Execute Trade
+
+                <div className="flex gap-3 w-full lg:w-auto">
+                  <button onClick={() => setIsTradeOpen(true)} className="flex-1 lg:flex-none justify-center flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-emerald-500 text-black hover:bg-emerald-400 shadow-[0_4px_14px_rgba(16,185,129,0.3)] transition-all hover:-translate-y-0.5">
+                    <Zap size={16} /> Trade
                   </button>
                 </div>
               </div>
 
-              {/* ✨ NEW LIVE CANDLESTICK CHART ✨ */}
-              <div className="h-64 w-full mt-10 border-b border-[#1e1e20] pb-2">
-                 <LiveCandlestickChart currentPrice={totalEquity} />
+              {/* Timeframe Toggles */}
+              <div className="flex gap-2 mb-4">
+                {['1D', '1W', '1M', '3M', 'ALL'].map(tf => (
+                  <button key={tf} className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${tf === '1D' ? 'bg-[#27272a] text-white' : 'text-gray-500 hover:text-white hover:bg-[#1e1e20]'}`}>{tf}</button>
+                ))}
+              </div>
+
+              {/* Interactive Candlestick Chart */}
+              <div className="h-64 w-full border-b border-[#1e1e20] pb-2">
+                 {/* We pass a key so the chart completely redraws when we click a new asset */}
+                 <LiveCandlestickChart key={activeChartAsset.name} currentPrice={currentChartValue} />
               </div>
             </div>
 
-            {/* BENTO GRID */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <div className="xl:col-span-2 bg-[#09090b] border border-[#1e1e20] rounded-3xl p-6 lg:p-8">
+              {/* ASSET LIST (Interactive) */}
+              <div className="xl:col-span-2 bg-[#09090b] border border-[#1e1e20] rounded-3xl p-6 lg:p-8 flex flex-col max-h-[600px]">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2"><PieChart size={18}/> Active Positions</h3>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2"><PieChart size={18}/> Active Markets</h3>
+                  {/* Mobile Search Input */}
+                  <div className="relative md:hidden w-32">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500" size={12} />
+                    <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-[#121214] border border-[#27272a] rounded-full pl-7 pr-3 py-1 text-xs text-white" />
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  {assets.map((asset) => {
+                
+                <div className="space-y-3 overflow-y-auto custom-scrollbar pr-2 flex-1">
+                  {filteredAssets.length === 0 ? (
+                     <div className="text-center text-gray-500 py-10">No assets found matching "{searchQuery}"</div>
+                  ) : filteredAssets.map((asset) => {
                     const pnl = asset.value - asset.cost;
+                    const isActive = activeChartAsset.id === asset.id;
+                    
                     return (
-                      <div key={asset.id} className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-[#121214] border border-[#1e1e20] hover:border-emerald-500/30 transition-all">
+                      <div 
+                        key={asset.id} 
+                        onClick={() => setActiveChartAsset(asset)}
+                        className={`group flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${isActive ? 'bg-[#1e1e20] border-emerald-500/50' : 'bg-[#121214] border-[#1e1e20] hover:border-gray-600'}`}
+                      >
                         <div className="flex items-center gap-4 mb-4 sm:mb-0 w-full sm:w-auto">
                           <div className={`w-10 h-10 rounded-full bg-[#1e1e20] flex items-center justify-center font-bold text-sm shrink-0 ${asset.color}`}>
                             {asset.ticker.charAt(0)}
@@ -204,15 +333,12 @@ export default function VaultFinance() {
                         </div>
                         <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t sm:border-t-0 border-[#1e1e20] pt-3 sm:pt-0">
                           <div className="text-left sm:text-right">
-                            <p className="text-[10px] text-gray-500 uppercase mb-0.5">Unrealized P&L</p>
+                            <p className="text-[10px] text-gray-500 uppercase mb-0.5">P&L</p>
                             <p className={`text-sm font-bold font-mono transition-colors duration-300 ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                               {pnl >= 0 ? '+' : ''}{formatMoney(pnl)}
                             </p>
                           </div>
-                          <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => openQuickTrade(asset, 'Buy')} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-lg transition-colors">Buy</button>
-                            <button onClick={() => openQuickTrade(asset, 'Sell')} className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold rounded-lg transition-colors">Sell</button>
-                          </div>
+                          <ChevronRight size={18} className={`transition-transform ${isActive ? 'text-emerald-500 translate-x-1' : 'text-gray-600 group-hover:text-white'}`} />
                         </div>
                       </div>
                     );
@@ -220,51 +346,65 @@ export default function VaultFinance() {
                 </div>
               </div>
 
-              <div className="bg-[#09090b] border border-[#1e1e20] rounded-3xl p-6 lg:p-8 flex flex-col h-96 xl:h-auto">
-                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2"><Activity size={18} className="text-emerald-400"/> Live Feed</h3>
-                <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                  {transactions.slice(0, 10).map((tx) => (
-                    <div key={tx.id} className="flex items-start justify-between">
+              {/* EXECUTION LOG */}
+              <div className="bg-[#09090b] border border-[#1e1e20] rounded-3xl p-6 lg:p-8 flex flex-col h-[500px] xl:h-[600px]">
+                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2"><Activity size={18} className="text-emerald-400"/> Execution Log</h3>
+                <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-2">
+                  {transactions.filter(tx => tx.amount !== 0).length === 0 ? (
+                    <div className="text-center text-gray-500 py-10 text-sm">No recent trades.</div>
+                  ) : transactions.filter(tx => tx.amount !== 0).map((tx) => (
+                    <div key={tx.id} className="flex items-start justify-between bg-[#121214] p-3 rounded-xl border border-[#1e1e20]">
                       <div className="flex items-start gap-3">
-                        <div className={`mt-0.5 p-2 bg-[#1e1e20] rounded-lg ${tx.amount === 0 ? 'text-yellow-400' : 'text-gray-400'}`}>{tx.icon}</div>
+                        <div className="mt-0.5 p-2 bg-[#1e1e20] rounded-lg text-gray-400">{tx.icon}</div>
                         <div>
-                          <p className={`text-sm font-bold ${tx.amount === 0 ? 'text-yellow-400' : 'text-white'}`}>{tx.title}</p>
-                          <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-1">{tx.category}</p>
+                          <p className="text-sm font-bold text-white">{tx.title}</p>
+                          <p className="text-[10px] text-gray-500 mt-0.5">{tx.date}</p>
                         </div>
                       </div>
+                      <span className={`text-xs font-bold font-mono ${tx.amount > 0 ? 'text-emerald-400' : 'text-gray-300'}`}>
+                        {tx.amount > 0 ? '+' : ''}{formatMoney(tx.amount)}
+                      </span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
           </div>
+          )}
         </div>
 
-        {/* TRADE MODAL */}
+        {/* --- TRADE MODAL --- */}
         {isTradeOpen && (
           <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !isProcessing && setIsTradeOpen(false)}></div>
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !isProcessing && setIsTradeOpen(false)}></div>
             <div className="relative w-full max-w-md bg-[#09090b] border border-[#27272a] rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-white">Order Ticket</h2>
                 <button onClick={() => !isProcessing && setIsTradeOpen(false)} className="text-gray-500"><X size={20}/></button>
               </div>
               <form onSubmit={handleExecuteTrade} className="space-y-4">
+                <div className="flex bg-[#1e1e20] rounded-xl p-1 mb-4">
+                  <button type="button" onClick={() => setTradeAction('Buy')} className={`flex-1 py-2 text-sm font-bold rounded-lg ${tradeAction === 'Buy' ? 'bg-emerald-500 text-black' : 'text-gray-400'}`}>Buy</button>
+                  <button type="button" onClick={() => setTradeAction('Sell')} className={`flex-1 py-2 text-sm font-bold rounded-lg ${tradeAction === 'Sell' ? 'bg-red-500 text-white' : 'text-gray-400'}`}>Sell</button>
+                </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Asset</label>
-                  <select value={selectedAsset.id} disabled={isProcessing} onChange={(e) => setSelectedAsset(assets.find(a => a.id === e.target.value))} className="w-full bg-[#121214] border border-[#27272a] rounded-xl px-4 py-3 text-white focus:outline-none">
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Select Asset</label>
+                  <select value={selectedAsset.id} onChange={(e) => setSelectedAsset(assets.find(a => a.id === e.target.value))} className="w-full bg-[#121214] border border-[#27272a] rounded-xl px-4 py-3 text-white focus:outline-none">
                     {assets.map(a => <option key={a.id} value={a.id}>{a.name} ({a.ticker})</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Amount (USD)</label>
+                  <div className="flex justify-between mb-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase">Amount (USD)</label>
+                    <span className="text-xs text-gray-500">Avail: <span className="text-emerald-400">{formatMoney(buyingPower)}</span></span>
+                  </div>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                    <input type="number" step="0.01" placeholder="0.00" value={tradeAmount} disabled={isProcessing} onChange={(e) => setTradeAmount(e.target.value)} className="w-full bg-[#121214] border border-[#27272a] rounded-xl pl-8 pr-4 py-3 text-white text-lg font-bold font-mono" />
+                    <input type="number" step="0.01" value={tradeAmount} onChange={(e) => setTradeAmount(e.target.value)} required className="w-full bg-[#121214] border border-[#27272a] rounded-xl pl-8 pr-4 py-3 text-white text-lg font-bold font-mono" />
                   </div>
                 </div>
-                <button type="submit" disabled={isProcessing} className="w-full py-4 mt-4 rounded-xl font-bold text-sm uppercase bg-emerald-500 text-black">
-                  {isProcessing ? "Routing..." : `Submit Order`}
+                <button type="submit" disabled={isProcessing} className="w-full py-4 mt-4 rounded-xl font-bold text-sm uppercase tracking-wider bg-emerald-500 text-black flex justify-center items-center gap-2 hover:bg-emerald-400 transition-colors">
+                  {isProcessing ? <><RefreshCw size={16} className="animate-spin" /> Routing...</> : `Confirm ${tradeAction}`}
                 </button>
               </form>
             </div>
@@ -282,57 +422,47 @@ export default function VaultFinance() {
 }
 
 // --- SUB-COMPONENTS ---
-function NavItem({ icon, label, active }) {
+function NavItem({ icon, label, active, onClick }) {
   return (
-    <button className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${active ? 'bg-[#1e1e20] text-white' : 'text-gray-500 hover:bg-[#121214] hover:text-white'}`}>
+    <button onClick={onClick} className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${active ? 'bg-[#1e1e20] text-white' : 'text-gray-500 hover:bg-[#121214] hover:text-white'}`}>
       <div className={`${active ? 'text-emerald-400' : ''}`}>{icon}</div>
-      <span className="hidden lg:block text-sm font-semibold">{label}</span>
+      <span className="text-sm font-semibold block lg:block">{label}</span>
     </button>
   );
 }
 
-// ✨ THE CANDLESTICK ENGINE ✨
 function LiveCandlestickChart({ currentPrice }) {
-  // 1. Generate 40 initial fake historical candles leading up to the current price
   const [candles, setCandles] = useState(() => {
-    let price = currentPrice - 500; // Start a bit lower
+    let price = currentPrice - 100; 
     const initial = [];
     for(let i=0; i<40; i++) {
       const open = price;
-      const close = open + (Math.random() - 0.45) * 200; 
-      const high = Math.max(open, close) + Math.random() * 100;
-      const low = Math.min(open, close) - Math.random() * 100;
+      const close = open + (Math.random() - 0.45) * 50; 
+      const high = Math.max(open, close) + Math.random() * 20;
+      const low = Math.min(open, close) - Math.random() * 20;
       initial.push({ id: i, open, close, high, low });
       price = close;
     }
     return initial;
   });
 
-  // 2. React to the live totalEquity price moving
   useEffect(() => {
     setCandles(prev => {
       const newCandles = [...prev];
       const lastCandle = { ...newCandles[newCandles.length - 1] };
-      
-      // Update the close price
       lastCandle.close = currentPrice;
-      
-      // Stretch the wick if price goes higher/lower than recorded
       if (currentPrice > lastCandle.high) lastCandle.high = currentPrice;
       if (currentPrice < lastCandle.low) lastCandle.low = currentPrice;
-      
       newCandles[newCandles.length - 1] = lastCandle;
       return newCandles;
     });
   }, [currentPrice]);
 
-  // 3. Every 10 seconds, "close" the candle and start a new one to simulate time moving forward
   useEffect(() => {
     const timeInterval = setInterval(() => {
       setCandles(prev => {
-        const newCandles = [...prev.slice(1)]; // Remove the oldest candle on the far left
+        const newCandles = [...prev.slice(1)]; 
         const lastPrice = newCandles[newCandles.length - 1].close;
-        // Spawn a new candle on the right starting at the last close price
         newCandles.push({ id: Date.now(), open: lastPrice, close: lastPrice, high: lastPrice, low: lastPrice });
         return newCandles;
       });
@@ -340,9 +470,8 @@ function LiveCandlestickChart({ currentPrice }) {
     return () => clearInterval(timeInterval);
   }, []);
 
-  // Calculate rendering scale
-  const minPrice = Math.min(...candles.map(c => c.low)) - 100;
-  const maxPrice = Math.max(...candles.map(c => c.high)) + 100;
+  const minPrice = Math.min(...candles.map(c => c.low)) - 20;
+  const maxPrice = Math.max(...candles.map(c => c.high)) + 20;
   const priceRange = maxPrice - minPrice;
   const getPercent = (val) => ((val - minPrice) / priceRange) * 100;
 
@@ -351,28 +480,18 @@ function LiveCandlestickChart({ currentPrice }) {
       {candles.map((candle, i) => {
         const isGreen = candle.close >= candle.open;
         const color = isGreen ? 'bg-emerald-500' : 'bg-red-500';
-        const isLast = i === candles.length - 1; // Pulse the live candle
+        const isLast = i === candles.length - 1; 
         
         const topWick = 100 - getPercent(candle.high);
         const bottomWick = getPercent(candle.low);
         const bodyTop = 100 - getPercent(Math.max(candle.open, candle.close));
         const bodyBottom = getPercent(Math.min(candle.open, candle.close));
-        
-        // Ensure minimum 1px body height so doji candles (open==close) still show up
         const bodyHeight = Math.max((bodyBottom - bodyTop), 0.5);
 
         return (
           <div key={candle.id} className="relative flex-1 h-full group">
-            {/* The Wick (High to Low) */}
-            <div 
-              className={`absolute left-1/2 -translate-x-1/2 w-[1px] ${color} opacity-40`}
-              style={{ top: `${topWick}%`, bottom: `${bottomWick}%` }}
-            />
-            {/* The Body (Open to Close) */}
-            <div 
-              className={`absolute left-0 right-0 ${color} rounded-[1px] ${isLast ? 'animate-pulse shadow-[0_0_10px_currentColor]' : ''}`}
-              style={{ top: `${bodyTop}%`, height: `${bodyHeight}%` }}
-            />
+            <div className={`absolute left-1/2 -translate-x-1/2 w-[1px] ${color} opacity-40`} style={{ top: `${topWick}%`, bottom: `${bottomWick}%` }} />
+            <div className={`absolute left-0 right-0 ${color} rounded-[1px] ${isLast ? 'animate-pulse shadow-[0_0_10px_currentColor]' : ''}`} style={{ top: `${bodyTop}%`, height: `${bodyHeight}%` }} />
           </div>
         );
       })}
