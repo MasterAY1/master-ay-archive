@@ -1,33 +1,57 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Loader2, RefreshCw } from 'lucide-react';
+import { 
+  Sparkles, Send, Copy, ThumbsUp, ThumbsDown, 
+  MessageSquare, Clock, Settings, LogOut, PanelLeftClose, PanelLeft,
+  Bot, User, ChevronDown, Check
+} from 'lucide-react';
+
+// --- MOCK HISTORY DATA ---
+const CHAT_HISTORY = [
+  { id: 1, title: "Product Launch Tweet", time: "2 hrs ago" },
+  { id: 2, title: "Cold Email for SaaS", time: "5 hrs ago" },
+  { id: 3, title: "Blog Intro: AI in 2026", time: "Yesterday" },
+  { id: 4, title: "Landing Page Copy", time: "Yesterday" },
+];
 
 export default function NovaAI() {
+  const [prompt, setPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [copiedId, setCopiedId] = useState(null);
+  
+  // Initial welcome message
   const [messages, setMessages] = useState([
-    { role: 'ai', text: "Hello, architect. I am Nova, running securely on your Python backend. What are we building today?" }
+    { 
+      id: 1, 
+      role: 'ai', 
+      content: "Hello! I'm Nova, your AI assistant running on a secure Python backend. What are we creating today?" 
+    }
   ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
 
-  // Auto-scroll to bottom of chat
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const chatEndRef = useRef(null);
+
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isGenerating]);
 
+  // --- THE REAL FULL-STACK CONNECTION ---
   const handleSend = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (e) e.preventDefault();
+    if (!prompt.trim() || isGenerating) return;
 
-    const userText = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userText }]);
-    setIsLoading(true);
+    const userText = prompt.trim();
+    
+    // 1. Add user message to chat
+    const newUserMsg = { id: Date.now(), role: 'user', content: userText };
+    setMessages(prev => [...prev, newUserMsg]);
+    setPrompt('');
+    
+    // 2. Trigger loading state UI
+    setIsGenerating(true);
 
+    // 3. Talk to the Render Python Server
     try {
-      // ✨ The connection to your Python Master API! ✨
       const response = await fetch('https://vault-api-master-ay.onrender.com/api/nova/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,119 +61,194 @@ export default function NovaAI() {
       const data = await response.json();
 
       if (data.status === "error") {
-        setMessages(prev => [...prev, { role: 'ai', text: "⚠️ Connection error: " + data.reply, isError: true }]);
+        setMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', content: "⚠️ Backend Error: " + data.reply }]);
       } else {
-        setMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
+        setMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', content: data.reply }]);
       }
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'ai', text: "⚠️ Network Error: Could not reach the Python server.", isError: true }]);
+      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'ai', content: "⚠️ Network Error: Could not reach the Python server." }]);
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
-  const handleClear = () => setMessages([{ role: 'ai', text: "Memory wiped. Ready for a new directive." }]);
+  const copyToClipboard = (text, id) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-100 flex items-center justify-center p-4 lg:p-10 font-sans selection:bg-purple-500/30">
+    <div className="min-h-screen bg-[#09090b] text-gray-200 font-sans flex overflow-hidden selection:bg-indigo-500/30">
       
-      {/* Background Glow */}
-      <div className="fixed top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none"></div>
-      
-      <div className="w-full max-w-4xl h-[85vh] bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/5 rounded-3xl flex flex-col shadow-2xl relative z-10 overflow-hidden">
+      {/* --- SIDEBAR --- */}
+      <div className={`${sidebarOpen ? 'w-72' : 'w-0'} bg-[#131316] border-r border-white/5 transition-all duration-300 flex flex-col shrink-0 overflow-hidden relative z-20`}>
+        <div className="p-4 flex items-center gap-3 border-b border-white/5 h-16 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white">
+            <Sparkles size={18} />
+          </div>
+          <span className="font-bold text-lg tracking-wide text-white">Nova AI</span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          <button className="w-full flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white p-3 rounded-xl transition-colors mb-6 border border-white/5">
+            <PlusIcon /> New Chat
+          </button>
+
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Recent Chats</div>
+          <div className="space-y-1">
+            {CHAT_HISTORY.map(chat => (
+              <button key={chat.id} className="w-full flex flex-col items-start p-3 rounded-xl hover:bg-white/5 transition-colors group text-left">
+                <div className="flex items-center gap-2 text-gray-300 group-hover:text-white transition-colors w-full">
+                  <MessageSquare size={14} className="shrink-0" />
+                  <span className="text-sm truncate">{chat.title}</span>
+                </div>
+                <div className="text-[10px] text-gray-600 ml-6 mt-1">{chat.time}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-white/5 shrink-0">
+          <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-gray-400 hover:text-white">
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="User" className="w-6 h-6 rounded-full" />
+            <span className="text-sm font-medium flex-1 text-left">Ayomide A.</span>
+            <Settings size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* --- MAIN CHAT AREA --- */}
+      <div className="flex-1 flex flex-col h-screen relative">
         
         {/* Header */}
-        <header className="h-20 border-b border-white/5 flex items-center justify-between px-8 shrink-0 bg-[#0a0a0a]">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-              <Sparkles size={20} />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Nova AI</h1>
-              <p className="text-xs text-purple-400 font-mono flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
-                Python Backend Connected
-              </p>
+        <header className="h-16 flex items-center justify-between px-4 border-b border-white/5 bg-[#09090b]/80 backdrop-blur-md sticky top-0 z-10">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+              {sidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeft size={20} />}
+            </button>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+              <span className="text-sm font-medium text-gray-300">Nova-4 (Advanced)</span>
+              <ChevronDown size={14} className="text-gray-500" />
             </div>
           </div>
-          <button onClick={handleClear} className="text-gray-500 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/5" title="Clear Chat">
-            <RefreshCw size={18} />
+          <button className="text-sm font-medium text-indigo-400 hover:text-indigo-300 px-4 py-2 rounded-lg hover:bg-indigo-500/10 transition-colors">
+            Upgrade Plan
           </button>
         </header>
 
-        {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 custom-scrollbar">
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`flex gap-4 max-w-[85%] ${msg.role === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
-              {/* Avatar */}
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${
-                msg.role === 'user' 
-                  ? 'bg-white/5 border-white/10 text-white' 
-                  : msg.isError 
-                    ? 'bg-red-500/10 border-red-500/20 text-red-400' 
-                    : 'bg-purple-500/10 border-purple-500/20 text-purple-400'
-              }`}>
-                {msg.role === 'user' ? <User size={18} /> : <Bot size={18} />}
-              </div>
+        {/* Chat Feed */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar scroll-smooth">
+          <div className="max-w-3xl mx-auto space-y-8 pb-32">
+            {messages.map((msg) => (
+              <div key={msg.id} className={`flex gap-4 ${msg.role === 'ai' ? '' : 'flex-row-reverse'}`}>
+                
+                {/* Avatar */}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'ai' ? 'bg-indigo-500 text-white' : 'bg-gray-700 text-white'}`}>
+                  {msg.role === 'ai' ? <Sparkles size={16} /> : <User size={16} />}
+                </div>
 
-              {/* Message Bubble */}
-              <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                msg.role === 'user'
-                  ? 'bg-white/5 border border-white/5 text-gray-200 rounded-tr-sm'
-                  : msg.isError
-                    ? 'bg-red-500/5 border border-red-500/10 text-red-200 rounded-tl-sm'
-                    : 'bg-purple-500/5 border border-purple-500/10 text-gray-300 rounded-tl-sm'
-              }`}>
-                {msg.text.split('\n').map((line, i) => <p key={i} className="mb-2 last:mb-0">{line}</p>)}
+                {/* Message Bubble */}
+                <div className={`group flex flex-col max-w-[85%] ${msg.role === 'ai' ? 'items-start' : 'items-end'}`}>
+                  <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
+                    msg.role === 'ai' 
+                      ? 'bg-[#18181b] border border-white/5 text-gray-200 rounded-tl-sm' 
+                      : 'bg-indigo-600 text-white rounded-tr-sm'
+                  }`}>
+                    {/* Maps over new lines so AI paragraphs look nice */}
+                    {msg.content.split('\n').map((line, i) => (
+                      <p key={i} className="mb-2 last:mb-0">{line}</p>
+                    ))}
+                  </div>
+                  
+                  {/* AI Action Buttons (Copy, Like, Dislike) */}
+                  {msg.role === 'ai' && (
+                    <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => copyToClipboard(msg.content, msg.id)}
+                        className="p-1.5 text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-md transition-colors flex items-center gap-1.5"
+                      >
+                        {copiedId === msg.id ? <Check size={14} className="text-green-400"/> : <Copy size={14} />}
+                        <span className="text-xs">{copiedId === msg.id ? 'Copied' : 'Copy'}</span>
+                      </button>
+                      <button className="p-1.5 text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-md transition-colors"><ThumbsUp size={14} /></button>
+                      <button className="p-1.5 text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-md transition-colors"><ThumbsDown size={14} /></button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-          
-          {isLoading && (
-            <div className="flex gap-4 max-w-[85%]">
-              <div className="w-10 h-10 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0 text-purple-400">
-                <Bot size={18} />
-              </div>
-              <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-500/10 text-gray-400 flex items-center gap-2 rounded-tl-sm">
-                <Loader2 size={16} className="animate-spin text-purple-500" />
-                <span className="text-xs uppercase tracking-widest font-mono">Synthesizing...</span>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+            ))}
 
-        {/* Input Area */}
-        <div className="p-4 sm:p-6 bg-[#0a0a0a] border-t border-white/5">
-          <form onSubmit={handleSend} className="relative flex items-center">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Message Nova..."
-              disabled={isLoading}
-              className="w-full bg-[#121214] border border-white/10 rounded-2xl pl-6 pr-14 py-4 text-sm text-white focus:outline-none focus:border-purple-500/50 transition-colors placeholder-gray-600"
-            />
-            <button 
-              type="submit" 
-              disabled={!input.trim() || isLoading}
-              className="absolute right-2 p-2.5 rounded-xl bg-purple-600 text-white hover:bg-purple-500 transition-colors disabled:opacity-50 disabled:hover:bg-purple-600 flex items-center justify-center"
-            >
-              <Send size={18} className={input.trim() && !isLoading ? 'translate-x-0.5 -translate-y-0.5 transition-transform' : ''} />
-            </button>
-          </form>
-          <div className="text-center mt-3">
-            <p className="text-[10px] text-gray-600 font-mono uppercase tracking-widest">Powered by Google Gemini & FastAPI</p>
+            {/* Simulated Loading State */}
+            {isGenerating && (
+              <div className="flex gap-4 animate-in fade-in duration-300">
+                <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0">
+                  <Sparkles size={16} />
+                </div>
+                <div className="p-4 rounded-2xl bg-[#18181b] border border-white/5 rounded-tl-sm flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  <span className="text-sm text-gray-400 ml-2">Nova is thinking...</span>
+                </div>
+              </div>
+            )}
+            
+            <div ref={chatEndRef} />
           </div>
         </div>
+
+        {/* --- INPUT AREA --- */}
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#09090b] via-[#09090b] to-transparent pt-10 pb-6 px-4">
+          <div className="max-w-3xl mx-auto relative">
+            <form 
+              onSubmit={handleSend}
+              className={`relative bg-[#18181b] border ${isGenerating ? 'border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'border-white/10 focus-within:border-indigo-500'} rounded-2xl overflow-hidden transition-all duration-300`}
+            >
+              <textarea 
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend(e);
+                  }
+                }}
+                placeholder={isGenerating ? "Please wait..." : "Ask Nova anything..."}
+                disabled={isGenerating}
+                className="w-full bg-transparent p-4 pr-16 text-sm text-white resize-none focus:outline-none min-h-[56px] max-h-[200px]"
+                rows="1"
+              />
+              <button 
+                type="submit"
+                disabled={!prompt.trim() || isGenerating}
+                className={`absolute right-2 bottom-2 p-2 rounded-xl transition-all ${
+                  prompt.trim() && !isGenerating 
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-500' 
+                    : 'bg-white/5 text-gray-500'
+                }`}
+              >
+                <Send size={18} />
+              </button>
+            </form>
+            <div className="text-center mt-3 text-xs text-gray-500">
+              Nova AI can make mistakes. Consider verifying important information.
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.5); }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
       `}</style>
     </div>
   );
+}
+
+function PlusIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>;
 }
