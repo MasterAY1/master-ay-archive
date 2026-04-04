@@ -37,9 +37,9 @@ export default function VaultFinance() {
   const [tradeAmount, setTradeAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false); 
 
-  // --- ENGINE 1: FULL-STACK BACKEND CONNECTION ---
+ // --- ENGINE 1: FULL-STACK BACKEND CONNECTION ---
   useEffect(() => {
-    fetch('http://localhost:8000/api/portfolio')
+    fetch('https://vault-api-master-ay.onrender.com/api/portfolio')
       .then(res => res.json())
       .then(data => setBuyingPower(data.buying_power))
       .catch(err => console.error("API Error:", err));
@@ -82,14 +82,21 @@ export default function VaultFinance() {
 
     setIsProcessing(true); 
     try {
-      const response = await fetch('http://localhost:8000/api/trade', {
+      // ✨ LIVE CLOUD API URL ✨
+      const response = await fetch('https://vault-api-master-ay.onrender.com/api/trade', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, action: tradeAction })
       });
       const data = await response.json();
-      if (data.status === "error") { alert("⚠️ " + data.message); return; }
+      
+      if (data.status === "error") { 
+        alert("⚠️ " + data.message); 
+        setIsProcessing(false);
+        return; 
+      }
 
+      // Update UI with cloud data
       setBuyingPower(data.new_buying_power);
       setAssets(assets.map(a => a.id === selectedAsset.id ? { 
         ...a, 
