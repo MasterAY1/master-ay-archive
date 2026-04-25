@@ -34,7 +34,7 @@ def init_db():
     
     # 3. ✨ NEW: E-Commerce Products Table
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS store_products (
+        CREATE TABLE IF NOT EXISTS store_products_v2 (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             category TEXT,
@@ -46,19 +46,23 @@ def init_db():
     """)
     
     # Check if we need to seed the initial inventory
-    cursor.execute("SELECT COUNT(*) FROM store_products")
+    cursor.execute("SELECT COUNT(*) FROM store_products_v2")
     if cursor.fetchone()[0] == 0:
         initial_products = [
-            ("Oak Accent Chair", "Furniture", 349, 4.8, "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?q=80&w=800", "Crafted from solid sustainable oak, this chair features a minimalist silhouette."),
-            ("Minimalist Ceramic Vase", "Decor", 85, 4.9, "https://images.unsplash.com/photo-1612152605347-f93296cb657d?q=80&w=800", "Hand-thrown by local artisans, this unglazed ceramic vase offers a beautiful matte texture."),
-            ("Walnut Dining Table", "Furniture", 1299, 5.0, "https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?q=80&w=800", "A centerpiece for gathering. Constructed from premium American Walnut."),
-            ("Linen Lounge Sofa", "Furniture", 2100, 4.7, "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=800", "Deep, plush seating upholstered in breathable, stain-resistant Belgian linen."),
-            ("Brass Pendant Light", "Lighting", 220, 4.6, "https://images.unsplash.com/photo-1507473885765-e6ed057f7821?q=80&w=800", "A spun-brass dome pendant that casts a warm, directed glow."),
-            ("Woven Floor Rug", "Decor", 450, 4.8, "https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=800", "Hand-loomed using pure New Zealand wool."),
-            ("Matte Black Floor Lamp", "Lighting", 310, 4.9, "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?q=80&w=800", "Sleek and highly functional with a heavy marble base."),
-            ("Travertine Coffee Table", "Furniture", 890, 5.0, "https://images.unsplash.com/photo-1600607688969-a5bfcd64bd28?q=80&w=800", "A monolithic design carved from solid Italian travertine stone.")
+            ("iPhone 15 Pro Max", "Electronics", 1850000, 4.9, "https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=800", "Titanium design with A17 Pro chip and incredible camera system."),
+            ("MacBook Pro M3", "Electronics", 2500000, 5.0, "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=800", "Mind-blowing performance in a sleek aluminum unibody."),
+            ("Sony WH-1000XM5", "Electronics", 450000, 4.8, "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=800", "Industry-leading noise cancellation and supreme comfort."),
+            ("PlayStation 5 Console", "Electronics", 950000, 4.9, "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?q=80&w=800", "Next-gen gaming experience with lightning-fast SSD."),
+            ("Nike Air Force 1", "Fashion", 150000, 4.7, "https://images.unsplash.com/photo-1595950653106-6c9ebd614c3a?q=80&w=800", "Classic streetwear staple with durable leather construction."),
+            ("Zara Trench Coat", "Fashion", 85000, 4.6, "https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=800", "Elegant and timeless outerwear for any season."),
+            ("Casio G-Shock", "Fashion", 65000, 4.8, "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?q=80&w=800", "Rugged, water-resistant, and built for extreme conditions."),
+            ("Velvet Luxury Sofa", "Home", 850000, 4.9, "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=800", "Plush velvet seating with modern brass accents."),
+            ("LG 65-Inch OLED TV", "Electronics", 1200000, 5.0, "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?q=80&w=800", "Stunning 4K display with perfect blacks and infinite contrast."),
+            ("Adjustable Dumbbell Set", "Fitness", 120000, 4.7, "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=800", "Space-saving design that replaces 15 sets of weights."),
+            ("Treadmill Pro Max", "Fitness", 650000, 4.8, "https://images.unsplash.com/photo-1576678927484-cc907957088c?q=80&w=800", "Commercial-grade treadmill with smart screen integration."),
+            ("Minimalist Coffee Table", "Home", 150000, 4.6, "https://images.unsplash.com/photo-1532372576444-dda954194ad0?q=80&w=800", "Sleek wooden coffee table to elevate your living room.")
         ]
-        cursor.executemany("INSERT INTO store_products (name, category, price, rating, image, description) VALUES (?, ?, ?, ?, ?, ?)", initial_products)
+        cursor.executemany("INSERT INTO store_products_v2 (name, category, price, rating, image, description) VALUES (?, ?, ?, ?, ?, ?)", initial_products)
 
     # Re-initialize other defaults
     cursor.execute("SELECT COUNT(*) FROM portfolio")
@@ -82,7 +86,7 @@ def get_inventory():
     conn = sqlite3.connect("vault.db")
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM store_products")
+    cursor.execute("SELECT * FROM store_products_v2")
     products = [dict(row) for row in cursor.fetchall()]
     conn.close()
     return {"status": "success", "products": products}

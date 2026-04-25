@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ShoppingCart, Menu, ArrowRight, Star, Plus, X, Minus, Trash2, Heart, Search, Eye, ChevronDown, Loader2 } from 'lucide-react';
 
-const CATEGORIES = ["All", "Furniture", "Decor", "Lighting"];
+
 const SORT_OPTIONS = ["Featured", "Price: Low to High", "Price: High to Low", "Highest Rated"];
 
 export default function LuminaStore() {
@@ -17,6 +17,8 @@ export default function LuminaStore() {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [toast, setToast] = useState(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false); // Checkout loading state
+
+  const dynamicCategories = useMemo(() => ["All", ...new Set(products.map(p => p.category))], [products]);
 
   // --- ENGINE: FETCH INVENTORY FROM PYTHON BACKEND ---
   useEffect(() => {
@@ -144,7 +146,7 @@ export default function LuminaStore() {
                 <div className="flex items-center gap-1 text-xs font-bold text-gray-900"><Star size={12} className="fill-gray-900" /> {quickViewProduct.rating}</div>
               </div>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">{quickViewProduct.name}</h2>
-              <p className="text-2xl font-light text-gray-500 mb-6">${quickViewProduct.price}</p>
+              <p className="text-2xl font-light text-gray-500 mb-6">₦{quickViewProduct.price.toLocaleString()}</p>
               <p className="text-gray-600 leading-relaxed mb-8 flex-1">{quickViewProduct.description}</p>
               <div className="flex gap-4 mt-auto pt-6 border-t border-gray-100">
                 <button onClick={() => addToCart(quickViewProduct)} className="flex-1 py-4 bg-gray-900 text-white rounded-full font-bold hover:bg-black transition-colors flex justify-center items-center gap-2"><ShoppingCart size={18} /> Add to Cart</button>
@@ -178,7 +180,7 @@ export default function LuminaStore() {
                     <h3 className="font-semibold text-sm leading-tight">{item.name}</h3>
                     <button onClick={() => removeFromCart(item.id)} className="text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
                   </div>
-                  <p className="text-sm text-gray-500">${item.price}</p>
+                  <p className="text-sm text-gray-500">₦{item.price.toLocaleString()}</p>
                   <div className="flex items-center gap-3 mt-2">
                     <div className="flex items-center border border-gray-200 rounded-full">
                       <button onClick={() => updateCartQty(item.id, -1)} className="p-1.5 hover:bg-gray-100 rounded-l-full transition-colors"><Minus size={14} /></button>
@@ -195,7 +197,7 @@ export default function LuminaStore() {
           <div className="p-6 border-t border-gray-100 bg-gray-50">
             <div className="flex justify-between items-center mb-6">
               <span className="text-gray-500">Subtotal</span>
-              <span className="text-2xl font-bold">${cartTotalPrice.toLocaleString()}</span>
+              <span className="text-2xl font-bold">₦{cartTotalPrice.toLocaleString()}</span>
             </div>
             <button 
               onClick={handleCheckout}
@@ -215,7 +217,7 @@ export default function LuminaStore() {
             LUMINA<span className="text-gray-400">.</span>
           </div>
           <div className="hidden md:flex gap-8 text-sm font-medium text-gray-500">
-            {CATEGORIES.map(cat => (
+            {dynamicCategories.map(cat => (
               <button key={cat} onClick={() => { setActiveCategory(cat); scrollToShop(); }} className={`transition-colors ${activeCategory === cat ? 'text-gray-900 border-b-2 border-gray-900 pb-0.5' : 'hover:text-gray-900'}`}>{cat}</button>
             ))}
           </div>
@@ -294,7 +296,7 @@ export default function LuminaStore() {
                 <div className="flex flex-col gap-1 px-1 mt-auto">
                   <div className="flex justify-between items-start">
                     <p className="font-semibold text-gray-900 cursor-pointer hover:underline decoration-gray-300 underline-offset-4" onClick={() => setQuickViewProduct(product)}>{product.name}</p>
-                    <p className="font-bold tracking-tight">${product.price}</p>
+                    <p className="font-bold tracking-tight">₦{product.price.toLocaleString()}</p>
                   </div>
                   <div className="flex justify-between items-center text-sm text-gray-500 mt-1">
                     <p>{product.category}</p>
