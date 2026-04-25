@@ -696,13 +696,9 @@
         // ✨ GEMINI API INTEGRATIONS ✨
         // ==========================================
         
-        // Let the environment inject the API key to work correctly in this preview!
-        // When deploying to Netlify, replace "" with your "AIzaSy..." key.
-        const apiKey = ""; 
-
-        const getModelName = () => {
-            return apiKey === "" ? 'gemini-2.5-flash-preview-09-2025' : 'gemini-2.5-flash';
-        };
+        // The frontend no longer stores the API key. 
+        // All requests are securely routed through the backend proxy.
+        const proxyUrl = "https://vault-api-master-ay.onrender.com/api/gemini/proxy";
 
         const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -715,18 +711,18 @@
         };
 
         async function fetchGeminiText(prompt) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${getModelName()}:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            const payload = { prompt: prompt };
 
             for (let i = 0; i < 5; i++) {
                 try {
-                    const response = await fetch(url, {
+                    const response = await fetch(proxyUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
                     if (!response.ok) throw new Error(`HTTP ${response.status} - ${await response.text()}`);
                     const data = await response.json();
+                    if(data.error) throw new Error(data.error);
                     return data.candidates[0].content.parts[0].text;
                 } catch (e) {
                     if (i === 4) throw e;
@@ -736,21 +732,18 @@
         }
 
         async function fetchGeminiJSON(prompt, schema) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${getModelName()}:generateContent?key=${apiKey}`;
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { responseMimeType: "application/json", responseSchema: schema }
-            };
+            const payload = { prompt: prompt, schema_config: schema };
 
             for (let i = 0; i < 5; i++) {
                 try {
-                    const response = await fetch(url, {
+                    const response = await fetch(proxyUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
                     if (!response.ok) throw new Error(`HTTP ${response.status} - ${await response.text()}`);
                     const data = await response.json();
+                    if(data.error) throw new Error(data.error);
                     return JSON.parse(data.candidates[0].content.parts[0].text);
                 } catch (e) {
                     if (i === 4) throw e;

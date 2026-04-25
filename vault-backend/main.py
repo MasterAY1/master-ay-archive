@@ -223,6 +223,31 @@ def get_single_chat(chat_id: int):
     if row and row[0]: return {"status": "success", "messages": json.loads(row[0])}
     return {"status": "error", "messages": []}
 
+class ProxyRequest(BaseModel):
+    prompt: str
+    schema_config: Optional[dict] = None
+
+@app.post("/api/gemini/proxy")
+def gemini_proxy(req: ProxyRequest):
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key: return {"error": "API Key is missing from backend configuration."}
+
+    model = "gemini-2.5-flash"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    
+    payload = {"contents": [{"parts": [{"text": req.prompt}]}]}
+    if req.schema_config:
+        payload["generationConfig"] = {
+            "responseMimeType": "application/json",
+            "responseSchema": req.schema_config
+        }
+
+    try:
+        response = requests.post(url, json=payload, headers={"Content-Type": "application/json"})
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
 class ChatRequest(BaseModel):
     chat_id: Optional[int] = None
     prompt: str
