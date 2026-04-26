@@ -210,6 +210,11 @@ export default function LuminaStore() {
         )}
       </div>
 
+      {/* --- TOP PROMO BANNER --- */}
+      <div className="bg-gray-900 text-white text-[10px] font-bold tracking-[0.2em] uppercase text-center py-2.5">
+        Complimentary Express Delivery on orders over ₦500,000
+      </div>
+
       {/* --- NAVIGATION --- */}
       <nav className="sticky top-0 z-40 bg-[#fafafa]/80 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -241,8 +246,8 @@ export default function LuminaStore() {
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
             <span className="text-xs font-semibold tracking-wide uppercase text-gray-600">Spring Collection 2026</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-[1.1]">Curated pieces for <br className="hidden md:block" /><span className="italic font-light text-gray-500">mindful living.</span></h1>
-          <p className="text-gray-500 text-lg max-w-md leading-relaxed">Elevate your space with our sustainably sourced, handcrafted furniture. Designed to bring balance and warmth to your everyday environment.</p>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-[1.1]">The Minimalist <br className="hidden md:block" /><span className="italic font-light text-gray-500">Sale Event.</span></h1>
+          <p className="text-gray-500 text-lg max-w-md leading-relaxed">Discover our exclusive collection of premium electronics, fashion, and home essentials. Experience luxury with up to 25% off curated pieces.</p>
           <button onClick={scrollToShop} className="group w-fit flex items-center gap-3 px-8 py-4 bg-gray-900 text-white font-medium rounded-full hover:bg-black transition-colors mt-2 shadow-lg shadow-gray-900/20">Shop the Collection <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></button>
         </div>
         <div className="relative h-[400px] md:h-[600px] w-full rounded-3xl overflow-hidden group">
@@ -289,22 +294,28 @@ export default function LuminaStore() {
                       <Heart size={16} className={favorites.includes(product.id) ? "fill-red-500 text-red-500" : ""} />
                     </button>
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); addToCart(product); }} className="absolute bottom-4 left-1/2 -translate-x-1/2 translate-y-16 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 bg-white/95 backdrop-blur-md text-gray-900 font-medium px-6 py-3 rounded-full shadow-xl flex items-center justify-center gap-2 hover:bg-gray-900 hover:text-white w-[85%]">
-                    <Plus size={16} /> Quick Add
-                  </button>
+                  <div className="absolute top-4 left-4 bg-gray-900 text-white text-[10px] font-bold px-2.5 py-1 rounded-sm uppercase tracking-wider shadow-sm">
+                    -20%
+                  </div>
                 </div>
                 <div className="flex flex-col gap-1 px-1 mt-auto">
                   <div className="flex justify-between items-start">
-                    <p className="font-semibold text-gray-900 cursor-pointer hover:underline decoration-gray-300 underline-offset-4" onClick={() => setQuickViewProduct(product)}>{product.name}</p>
-                    <p className="font-bold tracking-tight">₦{product.price.toLocaleString()}</p>
+                    <p className="font-semibold text-gray-900 cursor-pointer hover:underline decoration-gray-300 underline-offset-4 line-clamp-1" onClick={() => setQuickViewProduct(product)}>{product.name}</p>
                   </div>
-                  <div className="flex justify-between items-center text-sm text-gray-500 mt-1">
-                    <p>{product.category}</p>
+                  <div className="flex items-end gap-2.5 mt-1">
+                    <p className="font-bold tracking-tight text-lg text-gray-900">₦{product.price.toLocaleString()}</p>
+                    <p className="text-sm font-medium text-gray-400 line-through mb-0.5">₦{Math.round(product.price * 1.25).toLocaleString()}</p>
+                  </div>
+                  <div className="flex justify-between items-center text-sm text-gray-500 mt-2">
+                    <p className="text-[10px] font-bold tracking-widest uppercase">{product.category}</p>
                     <div className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full">
                       <Star size={10} className="fill-gray-900 text-gray-900" />
-                      <span className="font-medium text-xs">{product.rating}</span>
+                      <span className="font-semibold text-[10px]">{product.rating}</span>
                     </div>
                   </div>
+                  <button onClick={(e) => { e.stopPropagation(); addToCart(product); }} className="w-full mt-5 py-3.5 bg-gray-100 text-gray-900 rounded-xl font-bold hover:bg-gray-900 hover:text-white transition-colors flex justify-center items-center gap-2 text-sm">
+                    <ShoppingCart size={16} /> Add to Cart
+                  </button>
                 </div>
               </div>
             ))}
